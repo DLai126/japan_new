@@ -29,11 +29,17 @@
                     animation: {
                         'fadeIn': 'fadeIn 0.5s ease-out forwards',
                         'bounce-slow': 'bounce 3s infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'spin-slow': 'spin 4s linear infinite',
                     },
                     keyframes: {
                         fadeIn: {
                             '0%': { opacity: '0', transform: 'translateY(10px)' },
                             '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' },
                         }
                     }
                 }
@@ -50,36 +56,27 @@
 
     <style>
         body {
-            overscroll-behavior-y: none; /* Prevent pull-to-refresh on mobile */
+            overscroll-behavior-y: none;
             -webkit-tap-highlight-color: transparent;
         }
-        
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .text-3d {
             color: #ec4899;
             -webkit-text-stroke: 1.5px white;
             paint-order: stroke fill;
             text-shadow: 2px 2px 0px rgba(255, 200, 220, 0.5);
         }
-
-        .safe-margin-bottom {
-            margin-bottom: env(safe-area-inset-bottom);
-        }
-
-        /* Sakura Animation Keyframes */
+        /* iOS Safe Area Padding */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .mb-safe { margin-bottom: env(safe-area-inset-bottom); }
+        .safe-margin-bottom { margin-bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
+        
         @keyframes sakura-fall {
             0% { transform: translateY(-10%) rotate(0deg) translateX(0); opacity: 0; }
             10% { opacity: 1; }
             100% { transform: translateY(120vh) rotate(360deg) translateX(50px); opacity: 0; }
         }
-
         @keyframes fadeOut { 
             0% { opacity: 1; } 
             80% { opacity: 1; } 
@@ -89,18 +86,49 @@
 </head>
 <body class="bg-gray-50 select-none">
     <div id="root"></div>
+    
+    <!-- Error Handler -->
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            const root = document.getElementById('root');
+            if (root && !root.innerHTML) {
+                root.innerHTML = `<div style="padding:20px;text-align:center;color:red;margin-top:50px;"><h3>發生錯誤 :(</h3><p>${message}</p><button onclick="location.reload()" style="margin-top:10px;padding:10px;border:1px solid #ccc;">重新整理</button></div>`;
+            }
+            return false;
+        };
+    </script>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
 
-        // ==========================================
-        // 🔧 API 設定 (已移除預設 Key，改由使用者輸入)
-        // ==========================================
+        // API Key (預設為空，由使用者輸入)
         const globalApiKey = ""; 
 
-        // ==========================================
-        // 🔧 內建圖示元件庫
-        // ==========================================
+        // --- Custom Dialog Component (Replaces alert/confirm) ---
+        const Dialog = ({ isOpen, type, message, onConfirm, onCancel }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[6000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+                    <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border-4 border-pink-200 text-center relative">
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm border-2 ${type === 'confirm' ? 'bg-yellow-100 border-yellow-200' : 'bg-pink-100 border-pink-200'}`}>
+                            {type === 'confirm' ? '🤔' : '💡'}
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">{type === 'confirm' ? '確認一下' : '小提醒'}</h3>
+                        <p className="text-gray-600 mb-6 text-sm leading-relaxed">{message}</p>
+                        <div className="flex gap-3 justify-center">
+                            {type === 'confirm' && (
+                                <button onClick={onCancel} className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors">取消</button>
+                            )}
+                            <button onClick={onConfirm} className="flex-1 bg-pink-500 text-white py-3 rounded-xl font-bold hover:bg-pink-600 shadow-lg transition-colors">
+                                {type === 'confirm' ? '確認' : '知道了'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Icons ---
         const IconBase = ({ children, size = 24, className = "", ...props }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
                 {children}
@@ -129,7 +157,7 @@
             Camera: (props) => <IconBase {...props}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></IconBase>,
             Navigation: (props) => <IconBase {...props}><polygon points="3 11 22 2 13 21 11 13 3 11"/></IconBase>,
             Bus: (props) => <IconBase {...props}><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M5 22v-5"/><path d="M19 22v-5"/><path d="M3 11h18"/><path d="M10 15h4"/><path d="M7 6v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></IconBase>,
-            Sparkles: (props) => <IconBase {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></IconBase>,
+            Sparkles: (props) => <IconBase {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275-1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></IconBase>,
             Send: (props) => <IconBase {...props}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></IconBase>,
             Key: (props) => <IconBase {...props}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></IconBase>,
             Settings: (props) => <IconBase {...props}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></IconBase>,
@@ -138,12 +166,14 @@
             Share: (props) => <IconBase {...props}><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></IconBase>,
             PlusSquare: (props) => <IconBase {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></IconBase>,
             Download: (props) => <IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></IconBase>,
-            ExternalLink: (props) => <IconBase {...props}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></IconBase>
+            ExternalLink: (props) => <IconBase {...props}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></IconBase>,
+            CloudSun: (props) => <IconBase {...props}><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></IconBase>,
+            CloudRain: (props) => <IconBase {...props}><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></IconBase>,
+            Droplet: (props) => <IconBase {...props}><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></IconBase>,
+            Video: (props) => <IconBase {...props}><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></IconBase>
         };
 
-        // ==========================================
-        // 🎨 任天堂風格 SVG 浮水印元件庫
-        // ==========================================
+        // --- SVGs ---
         const MarioSilhouette = ({ className, color = "#fca5a5" }) => (
             <svg viewBox="0 0 100 100" className={className}>
                 <path d="M20,50 Q20,20 50,15 Q80,20 85,50 L95,50 L95,60 L10,60 L10,50 Z" fill={color} />
@@ -152,7 +182,6 @@
                 <path d="M30,75 Q45,65 60,75 Q75,65 80,75 Q70,90 55,85 Q45,90 30,75" fill={color} />
             </svg>
         );
-
         const ZeldaShield = ({ className, color = "#fca5a5" }) => (
             <svg viewBox="0 0 100 100" className={className}>
                 <path d="M15,20 Q15,5 50,5 Q85,5 85,20 V40 Q85,80 50,95 Q15,80 15,40 Z" fill="none" stroke={color} strokeWidth="4" />
@@ -161,14 +190,12 @@
                 <path d="M50,70 L50,85" stroke={color} strokeWidth="3" />
             </svg>
         );
-
         const PikachuSilhouette = ({ className, color = "#fca5a5" }) => (
             <svg viewBox="0 0 100 100" className={className}>
                 <path d="M10,70 L25,60 L25,50 L40,40" stroke={color} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
                 <path d="M35,80 Q30,50 45,45 Q40,20 30,15 L35,10 L50,35 L65,10 L70,15 Q60,20 55,45 Q70,50 65,80 Z" fill={color} />
             </svg>
         );
-
         const LeafIcon = ({ className, color = "#fca5a5" }) => (
             <svg viewBox="0 0 100 100" className={className}>
                 <path d="M50,90 Q20,80 20,50 Q20,10 50,10 Q80,10 80,50 Q80,80 50,90 Z" fill={color} />
@@ -176,7 +203,6 @@
                 <path d="M50,10 L50,80" stroke="white" strokeWidth="2" opacity="0.5" />
             </svg>
         );
-
         const SakuraBranch = ({ className, color = "#fca5a5" }) => (
             <svg viewBox="0 0 200 100" className={className}>
                 <path d="M0,50 Q50,40 80,60 T150,40 T200,60" stroke={color} strokeWidth="3" fill="none" strokeLinecap="round" />
@@ -188,17 +214,12 @@
                 <path d="M135,35 Q140,25 145,35" fill={color} />
             </svg>
         );
-
         const HexagonPattern = ({ className, color = "#fca5a5" }) => (
             <svg viewBox="0 0 100 100" className={className}>
                 <path d="M25,10 L75,10 L100,50 L75,90 L25,90 L0,50 Z" fill="none" stroke={color} strokeWidth="2" opacity="0.5" />
                 <path d="M25,10 L75,10 L100,50 L75,90 L25,90 L0,50 Z" transform="translate(50, 0) scale(0.5)" fill="none" stroke={color} strokeWidth="2" opacity="0.3" />
             </svg>
         );
-
-        // ==========================================
-        // 🎨 簡約小圖示
-        // ==========================================
         const SimpleOnigiri = ({ className, color = "#737373" }) => (
             <svg viewBox="0 0 100 100" className={className}>
                 <path d="M50 15 L15 80 Q50 95 85 80 Z" fill="none" stroke={color} strokeWidth="3" strokeLinejoin="round"/>
@@ -208,14 +229,12 @@
                 <path d="M48 60 Q50 63 52 60" stroke={color} strokeWidth="2" fill="none" strokeLinecap="round"/>
             </svg>
         );
-
         const SimpleFuji = ({ className, color = "#737373" }) => (
             <svg viewBox="0 0 100 80" className={className}>
                 <path d="M50 10 L90 75 H10 Z" fill="none" stroke={color} strokeWidth="3" strokeLinejoin="round"/>
                 <path d="M50 10 L65 35 L58 32 L50 40 L42 32 L35 35 Z" fill={color} opacity="0.4" stroke={color} strokeWidth="2" strokeLinejoin="round"/>
             </svg>
         );
-
         const SimpleDeer = ({ className, color = "#737373" }) => (
             <svg viewBox="0 0 100 100" className={className}>
                 <circle cx="25" cy="30" r="10" fill="none" stroke={color} strokeWidth="3"/>
@@ -226,7 +245,6 @@
                 <path d="M50 65 L50 70" stroke={color} strokeWidth="3"/>
             </svg>
         );
-
         const SimpleMatcha = ({ className, color = "#737373" }) => (
             <svg viewBox="0 0 100 100" className={className}>
                 <path d="M20 40 Q20 85 50 85 Q80 85 80 40 L20 40 Z" fill={color} opacity="0.3" stroke={color} strokeWidth="3" strokeLinejoin="round"/>
@@ -237,7 +255,6 @@
                 <circle cx="85" cy="62" r="8" fill="white" stroke={color} strokeWidth="2"/>
             </svg>
         );
-
         const SimpleTorii = ({ className, color = "#737373" }) => (
             <svg viewBox="0 0 100 100" className={className}>
                 <rect x="25" y="20" width="50" height="6" rx="2" fill={color} opacity="0.8"/> 
@@ -246,7 +263,6 @@
                 <rect x="59" y="20" width="6" height="70" fill={color} opacity="0.6"/>
             </svg>
         );
-
         const SimpleSakura = ({ className, color = "#ffb7c5" }) => (
             <svg viewBox="0 0 50 50" className={className}>
                 <path d="M25 25 Q25 5 35 10 Q45 15 25 25 Z" fill={color} opacity="0.9"/>
@@ -256,7 +272,6 @@
                 <circle cx="25" cy="25" r="3" fill="#fff"/>
             </svg>
         );
-
         const SimpleDaruma = ({ className, color = "#737373" }) => (
             <svg viewBox="0 0 100 100" className={className}>
                 <path d="M20 80 Q10 50 20 20 Q50 5 80 20 Q90 50 80 80 Q50 95 20 80 Z" fill="none" stroke={color} strokeWidth="3"/>
@@ -281,8 +296,6 @@
                 <div className="absolute bottom-20 right-1/3 w-6 h-6 opacity-30 transform rotate-45"><SimpleSakura className="w-full h-full" color="#fda4af"/></div>
             </div>
         );
-
-        // --- 智能導遊設定 (已升級 Gemini 2.5) ---
 
         const callGemini = async (prompt, userKey) => {
             const validKey = userKey || globalApiKey;
@@ -313,17 +326,15 @@
             }
         };
 
-        // --- 訊息文字解析器 (處理連結) ---
         const MessageContent = ({ text }) => {
-            // 簡單的 URL 偵測 Regex
             const urlRegex = /(https?:\/\/[^\s]+)/g;
+            if (typeof text !== 'string') return <span>{String(text)}</span>;
             const parts = text.split(urlRegex);
 
             return (
                 <span>
                     {parts.map((part, i) => {
                         if (part.match(urlRegex)) {
-                            // 檢查是否為 Google Maps 連結，如果是，可以給特別的樣式 (選擇性)
                             const isMaps = part.includes('google.com/maps');
                             return (
                                 <a 
@@ -332,7 +343,7 @@
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     className={`break-all font-bold hover:underline ${isMaps ? 'text-blue-600' : 'text-blue-500'}`}
-                                    onClick={(e) => e.stopPropagation()} // 避免觸發其他點擊事件
+                                    onClick={(e) => e.stopPropagation()} 
                                 >
                                     {isMaps ? '🗺️ 開啟地圖' : '🔗 連結'}
                                 </a>
@@ -344,57 +355,193 @@
             );
         };
 
-        const ChatModal = ({ isOpen, onClose, itinerary }) => {
-            // 新增 apiKey 狀態，預設從 localStorage 讀取
-            const [apiKey, setApiKey] = useState(() => {
-                try {
-                    return localStorage.getItem('gemini_api_key') || "";
-                } catch (e) {
-                    return "";
+        // --- Weather Helpers ---
+        const fetchWeatherData = async (lat, lon) => {
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,apparent_temperature&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo&forecast_days=4`);
+                if(!res.ok) throw new Error("Weather fetch failed");
+                const data = await res.json();
+                
+                if (!data.current || !data.daily) return null;
+
+                const days = ['週日','週一','週二','週三','週四','週五','週六'];
+
+                return {
+                    current: {
+                        temp: Math.round(data.current.temperature_2m),
+                        feelsLike: Math.round(data.current.apparent_temperature),
+                        code: data.current.weather_code,
+                        rainProb: data.daily.precipitation_probability_max?.[0] || 0
+                    },
+                    daily: data.daily.time.map((t, i) => {
+                        const d = new Date(t);
+                        return {
+                            date: `${d.getMonth()+1}/${d.getDate()} (${days[d.getDay()]})`,
+                            code: data.daily.weather_code[i],
+                            max: Math.round(data.daily.temperature_2m_max[i]),
+                            min: Math.round(data.daily.temperature_2m_min[i]),
+                            rain: data.daily.precipitation_probability_max[i]
+                        }
+                    }).slice(1)
+                };
+            } catch (e) {
+                console.warn("Weather API Error:", e);
+                return null;
+            }
+        };
+
+        const getWeatherIcon = (code, size = 24) => {
+            if (code === undefined || code === null) return <div style={{fontSize: size}}>?</div>;
+            if (code <= 1) return <Icons.Sun size={size} className="text-orange-400 animate-spin-slow" />;
+            if (code <= 3) return <Icons.CloudSun size={size} className="text-gray-400" />;
+            if (code <= 48) return <div style={{fontSize: size}} className="text-gray-400">🌫️</div>;
+            if (code <= 67) return <Icons.CloudRain size={size} className="text-blue-400" />;
+            if (code <= 77) return <div style={{fontSize: size}} className="text-blue-200">❄️</div>;
+            if (code <= 82) return <Icons.CloudRain size={size} className="text-blue-600" />;
+            return <div style={{fontSize: size}} className="text-yellow-600">⚡</div>;
+        };
+
+        const WeatherCard = ({ title, lat, lon, isCurrent = false }) => {
+            const [weatherData, setWeatherData] = useState(null);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                if(lat && lon) {
+                    setLoading(true);
+                    fetchWeatherData(lat, lon)
+                        .then(data => {
+                            setWeatherData(data);
+                            setLoading(false);
+                        })
+                        .catch(() => {
+                            setLoading(false);
+                            setWeatherData(null);
+                        });
+                } else {
+                    setLoading(false);
                 }
-            });
-            const [tempKey, setTempKey] = useState("");
+            }, [lat, lon]);
+
+            if (!lat || !lon) return isCurrent ? (
+                <div className="bg-white/60 p-4 rounded-2xl border-2 border-dashed border-gray-300 text-center text-gray-400 text-sm">
+                    點擊下方定位按鈕<br/>查看這裡的天氣
+                </div>
+            ) : null;
+
+            if (loading) return <div className="bg-white/60 p-4 rounded-2xl border-2 border-pink-100 h-32 animate-pulse"></div>;
             
+            if (!weatherData) return <div className="bg-white/60 p-4 rounded-2xl border-2 border-red-100 text-red-400 text-xs flex items-center justify-center">天氣暫無法顯示 (N/A)</div>;
+
+            const { current, daily } = weatherData;
+            const isRaining = current.rainProb > 40;
+            const bgClass = isRaining ? "bg-blue-50/90 border-blue-200" : "bg-orange-50/90 border-orange-200";
+
+            return (
+                <div className={`${bgClass} border-2 p-4 rounded-2xl shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md`}>
+                    <div className="flex justify-between items-start z-10 relative mb-4">
+                        <div>
+                            <h4 className="font-bold text-gray-700 text-lg flex items-center gap-1">
+                                {isCurrent && <Icons.MapPin size={16} className="text-pink-500"/>}
+                                {title}
+                            </h4>
+                            <div className="text-3xl font-mono font-bold text-gray-800 mt-1">{current.temp}°</div>
+                            <div className="text-xs text-gray-500 mt-1">體感 {current.feelsLike}°</div>
+                        </div>
+                        <div className="flex flex-col items-end">
+                            <div className="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-sm mb-2 animate-float">
+                                {getWeatherIcon(current.code)}
+                            </div>
+                            <div className="flex items-center gap-1 text-xs font-bold text-blue-500 bg-white/80 px-2 py-1 rounded-lg">
+                                <Icons.Droplet size={10} /> {current.rainProb}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between border-t border-gray-200/30 pt-3 relative z-10">
+                        {daily.map((day, idx) => (
+                            <div key={idx} className="flex flex-col items-center gap-1">
+                                <span className="text-[10px] text-gray-500 font-bold whitespace-nowrap">{day.date}</span>
+                                {getWeatherIcon(day.code, 16)}
+                                <span className="text-[10px] text-gray-700 font-mono">{day.min}°-{day.max}°</span>
+                                <span className="text-[9px] text-blue-400 font-bold">{day.rain}%</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {isRaining && <div className="absolute inset-0 opacity-10 pointer-events-none" style={{backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '10px 10px'}}></div>}
+                </div>
+            );
+        };
+
+        const SpotWeatherBadge = ({ city }) => {
+            const coords = {
+                'kyoto': { lat: 35.0116, lon: 135.7681 },
+                'osaka': { lat: 34.6937, lon: 135.5023 },
+                'nara': { lat: 34.6851, lon: 135.8048 },
+            };
+            const [w, setW] = useState(null);
+            
+            useEffect(() => {
+                const c = coords[city];
+                if(c) {
+                    fetchWeatherData(c.lat, c.lon)
+                        .then(setW)
+                        .catch(() => setW(null));
+                }
+            }, [city]);
+
+            if(!w) return null;
+
+            return (
+                <span className="inline-flex items-center gap-1 ml-2 px-1.5 py-0.5 rounded-md bg-gray-100/80 border border-gray-200 text-[10px] text-gray-600 font-mono transform scale-90 origin-left">
+                    {getWeatherIcon(w.current.code, 14)}
+                    <span>{w.current.temp}°</span>
+                    <span className="text-blue-500 flex items-center"><Icons.Droplet size={8}/>{w.current.rainProb}%</span>
+                </span>
+            );
+        };
+
+        const ChatModal = ({ isOpen, onClose, itinerary, apiKey, setApiKey }) => {
+            const [tempKey, setTempKey] = useState("");
             const [messages, setMessages] = useState([
                 { role: "ai", text: "哈囉！我是你們的京都大阪小導遊「櫻花醬」🌸\n\n有什麼問題都可以問我～ (例如：明天早餐吃什麼？怎麼去環球影城？)\n\n📍 點擊下方的定位按鈕，我可以推薦附近的商店喔！" }
             ]);
             const [input, setInput] = useState("");
             const [isLoading, setIsLoading] = useState(false);
-            const messagesEndRef = useRef(null);
-
-            // 位置狀態
+            const [locationStatus, setLocationStatus] = useState("idle");
             const [userLocation, setUserLocation] = useState(null);
-            const [locationStatus, setLocationStatus] = useState("idle"); // idle, loading, success, error
+            const messagesEndRef = useRef(null);
+            
+            // Local dialog state for ChatModal
+            const [chatDialog, setChatDialog] = useState({ isOpen: false, type: 'alert', message: '', onConfirm: null });
+            const closeChatDialog = () => setChatDialog(prev => ({ ...prev, isOpen: false }));
 
             useEffect(() => { if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isOpen]);
 
-            // 儲存 Key 到 LocalStorage
             const handleSaveKey = () => {
                 if (!tempKey.trim()) return;
                 const key = tempKey.trim();
                 setApiKey(key);
-                try {
-                    localStorage.setItem('gemini_api_key', key);
-                } catch (e) {
-                    console.warn("Storage failed", e);
-                }
+                try { localStorage.setItem('gemini_api_key', key); } catch (e) { console.warn("Storage failed", e); }
             };
 
-            // 清除 Key
             const handleClearKey = () => {
-                if (window.confirm("確定要移除目前的 API Key 嗎？")) {
-                    setApiKey("");
-                    setTempKey("");
-                    try {
-                        localStorage.removeItem('gemini_api_key');
-                    } catch (e) {}
-                }
+                setChatDialog({
+                    isOpen: true,
+                    type: 'confirm',
+                    message: "確定要移除目前的 API Key 嗎？",
+                    onConfirm: () => {
+                        setApiKey("");
+                        setTempKey("");
+                        try { localStorage.removeItem('gemini_api_key'); } catch (e) {}
+                        closeChatDialog();
+                    }
+                });
             };
 
-            // 獲取位置功能
             const handleGetLocation = () => {
                 if (!navigator.geolocation) {
-                    alert("您的瀏覽器不支援地理位置功能 >_<");
+                    setChatDialog({ isOpen: true, type: 'alert', message: "您的瀏覽器不支援地理位置功能 >_<", onConfirm: closeChatDialog });
                     return;
                 }
                 setLocationStatus("loading");
@@ -408,7 +555,7 @@
                     (error) => {
                         console.error(error);
                         setLocationStatus("error");
-                        alert("無法獲取位置，請確認是否允許存取定位權限。");
+                        setChatDialog({ isOpen: true, type: 'alert', message: "無法獲取位置，請確認是否允許存取定位權限。\n錯誤: " + error.message, onConfirm: closeChatDialog });
                     }
                 );
             };
@@ -426,21 +573,12 @@
                     })
                 };
 
-                // --- 2025-11-27 update: 強化位置與推薦邏輯 ---
                 let locationContext = "";
                 if (userLocation) {
                     locationContext = `
                     【目前使用者位置】
                     緯度: ${userLocation.lat}
                     經度: ${userLocation.lng}
-
-                    【推薦嚴格規範】
-                    當使用者詢問附近的商店/餐廳/設施時，請務必遵守以下「過濾條件」：
-                    1. 📍 **距離限制**：嚴格篩選距離座標 **800公尺內** (步行10分鐘) 的店家。絕對不要推薦需要搭車或太遠的地方。
-                    2. ⭐ **評價標準**：只推薦 Google Maps 評價 **4.0 顆星以上** 且評論數超過 50 則的優質店家。
-                    3. 🏢 **實體確認**：確保店家有實體店面且「目前營業中」(非幽靈廚房或已歇業)。名稱必須與 Google Maps 上「完全一致」。
-                    4. 🔥 **社群口碑**：優先推薦在 IG/Threads/小紅書 上有討論度或當地人愛去的店。
-                    5. 🔗 **連結格式**：每一間推薦務必提供 Google Maps 連結：https://www.google.com/maps/search/?api=1&query={店名} (請確保店名正確以免連結失效)。
                     `;
                 }
 
@@ -448,24 +586,32 @@
                 你是一個專業、挑惕且可愛的日本旅遊 AI 導遊「櫻花醬」。
                 
                 【任務目標】
-                協助使用者規劃京都大阪行程，並提供高品質的周邊推薦。
+                協助使用者規劃京都大阪行程。
                 
                 【行程資料】
                 ${JSON.stringify(cleanItinerary)}
 
                 ${locationContext}
 
+                【推薦嚴格規範】
+                1. 📍 **距離限制**：若有提供位置，篩選距離座標 **800公尺內**。
+                2. 🔥 **熱度與評價**：
+                   - 必須推薦 **社群討論度高** (IG/Threads 熱門) 或 **Google 評價高 (4.0顆星以上)** 的店家。
+                   - 優先推薦評論數多 (超過 100 則) 的人氣名店。
+                3. 🔗 **連結格式 (重要)**：
+                   - 每個推薦店家**必須**附上 Google Maps 連結。
+                   - 格式：https://www.google.com/maps/search/?api=1&query={店名}
+                   - 請直接貼上連結網址，不要使用 Markdown Link (不要用 [連結](url))，以便系統自動轉換為藍色按鈕。
+
                 【使用者問題】
                 ${input}
 
                 【回答規範】
-                1. 語氣：活潑可愛，使用繁體中文 (台灣用語)，適量使用 emoji (🌸, 🍱, ✨)。
-                2. 格式：若推薦店家，請列點呈現，包含「店名」、「預估距離」、「評價亮點」與「Google Maps 連結」。
-                3. 連結：請直接提供 URL，不要使用 Markdown 連結語法 (如 [文字](url))，系統會自動轉換。
-                4. 誠實：如果附近真的沒有符合高標準的店，請誠實告知「這附近比較荒涼/只有便利商店」，不要硬湊太遠的店。
+                1. 語氣：活潑可愛，繁體中文。
+                2. 格式：推薦店家請列出「店名」、「距離」、「評價」與「連結」。
+                3. **精簡：回答請控制在 150 字內，不要一次給太多資訊。**
                 `;
                 
-                // 將 apiKey 傳入 callGemini
                 const aiResponseText = await callGemini(systemPrompt, apiKey);
                 setMessages(prev => [...prev, { role: "ai", text: aiResponseText }]);
                 setIsLoading(false);
@@ -473,7 +619,6 @@
 
             if (!isOpen) return null;
 
-            // 如果沒有 Key，顯示輸入介面
             if (!apiKey) {
                 return (
                     <div className="fixed inset-0 z-[5000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
@@ -481,41 +626,30 @@
                              <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><Icons.X size={24}/></button>
                              <div className="w-16 h-16 bg-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm border-2 border-pink-200">🔑</div>
                              <h3 className="text-xl font-bold text-gray-800 mb-2">啟動 AI 櫻花醬</h3>
-                             <p className="text-sm text-gray-500 mb-6">請輸入您的 Google Gemini API Key 才能開始對話喔！</p>
-                             
-                             <input 
-                                type="password" 
-                                value={tempKey} 
-                                onChange={(e) => setTempKey(e.target.value)}
-                                placeholder="貼上 API Key (AIza...)"
-                                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-300 mb-4 transition-all"
-                             />
-                             
-                             <button onClick={handleSaveKey} disabled={!tempKey} className="w-full bg-pink-500 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-pink-600 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
-                                確認啟動
-                             </button>
-                             <div className="mt-4 text-[10px] text-gray-400">
-                                Key 僅儲存於您的瀏覽器中，不會上傳至伺服器。
-                             </div>
+                             <p className="text-sm text-gray-500 mb-6">請輸入您的 Google Gemini API Key</p>
+                             <input type="password" value={tempKey} onChange={(e) => setTempKey(e.target.value)} placeholder="API Key (AIza...)" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-300 mb-4 transition-all" />
+                             <button onClick={handleSaveKey} disabled={!tempKey} className="w-full bg-pink-500 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-pink-600 active:scale-95 transition-transform disabled:opacity-50">確認啟動</button>
                         </div>
                     </div>
                 );
             }
 
-            // 正常的聊天介面
             return (
-                <div className="fixed inset-0 z-[5000] bg-black/50 backdrop-blur-sm flex items-end justify-center sm:items-center p-4 animate-fadeIn">
-                    <div className="bg-white w-full max-w-md h-[80dvh] max-h-[85dvh] sm:h-[600px] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border-4 border-pink-200 relative">
+                <div className="fixed inset-0 z-[5000] bg-black/50 backdrop-blur-sm flex items-end justify-center sm:items-center p-4 animate-fadeIn pb-safe">
+                    <Dialog 
+                        isOpen={chatDialog.isOpen} 
+                        type={chatDialog.type} 
+                        message={chatDialog.message} 
+                        onConfirm={chatDialog.onConfirm} 
+                        onCancel={closeChatDialog} 
+                    />
+                    <div className="bg-white w-full max-w-md h-[80dvh] max-h-[85dvh] sm:h-[600px] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border-4 border-pink-200 relative mb-safe">
                         <div className="bg-pink-100 p-4 flex justify-between items-center border-b border-pink-200 shrink-0 relative z-10">
                             <div className="flex items-center gap-2">
                                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm border-2 border-pink-300">👩🏻‍🦰</div>
                                 <div>
                                     <h3 className="font-bold text-pink-600 text-lg">AI 櫻花醬</h3>
-                                    <div className="flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                                        <span className="text-xs text-pink-400">線上服務中</span>
-                                        <button onClick={handleClearKey} className="text-[10px] bg-white/50 px-1.5 py-0.5 rounded border border-pink-200 text-gray-500 hover:text-red-500 hover:border-red-200 transition-colors">重設 Key</button>
-                                    </div>
+                                    <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span><span className="text-xs text-pink-400">線上</span><button onClick={handleClearKey} className="text-[10px] bg-white/50 px-1.5 py-0.5 rounded border border-pink-200 text-gray-500 hover:text-red-500">重設</button></div>
                                 </div>
                             </div>
                             <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-red-100 rounded-full hover:bg-red-200 text-red-500 border border-red-200"><Icons.X size={22} /></button>
@@ -523,7 +657,7 @@
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#fffafc] overscroll-contain">
                             {messages.map((msg, idx) => (
                                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap shadow-sm ${msg.role === 'user' ? 'bg-pink-400 text-white rounded-tr-none' : 'bg-white border border-pink-100 text-gray-700 rounded-tl-none'}`}>
+                                    <div className={`max-w-[85%] p-4 rounded-2xl leading-relaxed whitespace-pre-wrap shadow-sm text-base ${msg.role === 'user' ? 'bg-pink-400 text-white rounded-tr-none' : 'bg-white border border-pink-100 text-gray-700 rounded-tl-none'}`}>
                                         {msg.role === 'system' ? <span className="text-pink-500 font-bold">{msg.text}</span> : <MessageContent text={msg.text} />}
                                     </div>
                                 </div>
@@ -531,18 +665,10 @@
                             {isLoading && <div className="flex justify-start"><div className="bg-white border border-pink-100 p-4 rounded-2xl rounded-tl-none shadow-sm flex gap-1"><div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce"></div><div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div><div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div></div></div>}
                             <div ref={messagesEndRef} />
                         </div>
-                        <div className="p-3 bg-white border-t border-pink-100 flex gap-2 pb-6 sm:pb-3 shrink-0 relative z-10">
-                            {/* 定位按鈕 */}
-                            <button 
-                                onClick={handleGetLocation} 
-                                disabled={locationStatus === 'loading'}
-                                className={`w-12 h-12 flex items-center justify-center rounded-2xl border transition-colors ${locationStatus === 'success' ? 'bg-green-100 text-green-600 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-blue-100 hover:text-blue-500'}`}
-                                title="獲取目前位置"
-                            >
-                                {locationStatus === 'loading' ? <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div> : <Icons.MapPin size={24} />}
-                            </button>
-                            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder="附近哪裡有賣..." className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-pink-300"/>
-                            <button onClick={handleSend} disabled={isLoading} className="bg-pink-500 text-white p-3 rounded-2xl hover:bg-pink-600 disabled:opacity-50 shadow-md"><Icons.Send size={20} /></button>
+                        <div className="p-3 bg-white border-t border-pink-100 flex items-center gap-2 pb-12 sm:pb-3 shrink-0 relative z-10">
+                            <button onClick={handleGetLocation} disabled={locationStatus === 'loading'} className={`w-10 h-10 flex items-center justify-center shrink-0 rounded-2xl border transition-colors ${locationStatus === 'success' ? 'bg-green-100 text-green-600 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{locationStatus === 'loading' ? <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div> : <Icons.MapPin size={20} />}</button>
+                            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder="附近有什麼..." className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-pink-300 min-w-0"/>
+                            <button onClick={handleSend} disabled={isLoading} className="bg-pink-500 text-white p-3 w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-pink-600 disabled:opacity-50 shadow-md shrink-0"><Icons.Send size={20} /></button>
                         </div>
                     </div>
                 </div>
@@ -570,30 +696,21 @@
             return <button onClick={onClick} className={`${styles[color]} ${activeStyle} ${className} transition-all duration-100 rounded-xl font-bold flex items-center justify-center`}>{children}</button>;
         };
 
-        const IOSInstallGuide = ({ onClose }) => {
-            return (
-                <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center p-6 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative text-center border-4 border-pink-200">
-                        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><Icons.X size={24}/></button>
-                        <div className="w-16 h-16 bg-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><Icons.Download size={32} className="text-pink-500"/></div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">安裝到 iPhone</h3>
-                        <p className="text-sm text-gray-500 mb-6">將此網頁加入主畫面，就能像 App 一樣全螢幕使用喔！</p>
-                        <div className="space-y-4 text-left bg-gray-50 p-4 rounded-xl text-sm text-gray-600">
-                            <div className="flex items-center gap-3"><div className="w-6 h-6 rounded-full bg-white shadow flex items-center justify-center text-xs font-bold text-blue-500 shrink-0">1</div><span>點擊 Safari 下方的 <Icons.Share size={14} className="inline mx-1 text-blue-500"/> 分享按鈕</span></div>
-                            <div className="flex items-center gap-3"><div className="w-6 h-6 rounded-full bg-white shadow flex items-center justify-center text-xs font-bold text-blue-500 shrink-0">2</div><span>往下滑動選單</span></div>
-                            <div className="flex items-center gap-3"><div className="w-6 h-6 rounded-full bg-white shadow flex items-center justify-center text-xs font-bold text-blue-500 shrink-0">3</div><span>選擇 <span className="font-bold">「加入主畫面」</span> <Icons.PlusSquare size={14} className="inline mx-1"/></span></div>
-                        </div>
-                        <button onClick={onClose} className="mt-6 w-full bg-pink-500 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-pink-600 active:scale-95 transition-transform">我知道了</button>
-                    </div>
+        const IOSInstallGuide = ({ onClose }) => (
+            <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center p-6 backdrop-blur-sm animate-fadeIn">
+                <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative text-center border-4 border-pink-200">
+                    <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><Icons.X size={24}/></button>
+                    <div className="w-16 h-16 bg-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><Icons.Download size={32} className="text-pink-500"/></div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">安裝到 iPhone</h3>
+                    <p className="text-sm text-gray-500 mb-6">將此網頁加入主畫面，就能像 App 一樣全螢幕使用喔！</p>
+                    <button onClick={onClose} className="mt-6 w-full bg-pink-500 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-pink-600 active:scale-95 transition-transform">我知道了</button>
                 </div>
-            );
-        };
+            </div>
+        );
 
         const SplashScreen = () => (
             <div className="fixed inset-0 z-[10000] bg-gradient-to-b from-pink-100 to-white flex flex-col items-center justify-center animate-fadeOut pointer-events-none">
-                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg border-4 border-pink-200 mb-4 animate-bounce">
-                    <Icons.PlaneReal size={48} className="text-pink-500" />
-                </div>
+                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg border-4 border-pink-200 mb-4 animate-bounce"><Icons.PlaneReal size={48} className="text-pink-500" /></div>
                 <h1 className="text-2xl font-bold text-pink-600 tracking-wider">大阪京都行</h1>
                 <p className="text-sm text-pink-400 mt-2">旅程準備中...</p>
             </div>
@@ -616,16 +733,59 @@
             const [showInstallModal, setShowInstallModal] = useState(false);
             const [isIos, setIsIos] = useState(false);
             const [showSplash, setShowSplash] = useState(true);
+            const [apiKey, setApiKey] = useState(() => {
+                try { return localStorage.getItem('gemini_api_key') || ""; } catch (e) { return ""; }
+            });
+            
             const dayMenuRef = useRef(null);
             const mainContentRef = useRef(null);
 
-            // --- Splash Screen Timer ---
-            useEffect(() => {
-                const timer = setTimeout(() => setShowSplash(false), 2000);
-                return () => clearTimeout(timer);
-            }, []);
+            const [jpyAmount, setJpyAmount] = useState('');
+            const [exchangeRate, setExchangeRate] = useState(0.215); 
+            const [isRateLoading, setIsRateLoading] = useState(false);
+            const [weatherLoc, setWeatherLoc] = useState(null);
+            const [locLoading, setLocLoading] = useState(false);
+            
+            // Dialog state
+            const [dialog, setDialog] = useState({ isOpen: false, type: 'alert', message: '', onConfirm: null });
+            const closeDialog = () => setDialog(prev => ({ ...prev, isOpen: false }));
 
-            // --- LocalStorage Logic (僅保留打勾功能) ---
+            const fetchRate = async () => {
+                setIsRateLoading(true);
+                try {
+                     const res = await fetch('https://api.exchangerate-api.com/v4/latest/JPY');
+                     if(!res.ok) throw new Error('Network response was not ok');
+                     const data = await res.json();
+                     if(data.rates.TWD) setExchangeRate(data.rates.TWD);
+                } catch (error) {
+                    console.error("Failed to fetch rate:", error);
+                } finally {
+                    setIsRateLoading(false);
+                }
+            };
+
+            const requestLocation = () => {
+                if (!navigator.geolocation) {
+                    setDialog({ isOpen: true, type: 'alert', message: "瀏覽器不支援定位", onConfirm: closeDialog });
+                    return;
+                }
+                setLocLoading(true);
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        setWeatherLoc({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+                        setLocLoading(false);
+                    },
+                    (err) => {
+                        console.log(err);
+                        setLocLoading(false);
+                        setDialog({ isOpen: true, type: 'alert', message: "無法獲取位置：請檢查定位權限", onConfirm: closeDialog });
+                    }
+                );
+            };
+
+            useEffect(() => { fetchRate(); }, []);
+            useEffect(() => { const timer = setTimeout(() => setShowSplash(false), 2000); return () => clearTimeout(timer); }, []);
+
             const [completedActivities, setCompletedActivities] = useState({});
             const [isDataLoaded, setIsDataLoaded] = useState(false);
 
@@ -641,9 +801,7 @@
 
             useEffect(() => {
                 if (isDataLoaded) {
-                    try {
-                        localStorage.setItem('trip_acts_v3', JSON.stringify(completedActivities));
-                    } catch (e) {}
+                    try { localStorage.setItem('trip_acts_v3', JSON.stringify(completedActivities)); } catch (e) {}
                 }
             }, [completedActivities, isDataLoaded]);
 
@@ -653,16 +811,18 @@
             };
 
             const clearAllData = () => {
-                if (window.confirm('確定要清除所有打勾紀錄嗎？')) {
-                    setCompletedActivities({});
-                    try {
-                        localStorage.removeItem('trip_acts_v3');
-                    } catch(e){}
-                    alert('已清除紀錄');
-                }
+                setDialog({
+                    isOpen: true,
+                    type: 'confirm',
+                    message: "確定要清除所有打勾紀錄嗎？",
+                    onConfirm: () => {
+                        setCompletedActivities({});
+                        try { localStorage.removeItem('trip_acts_v3'); } catch(e){}
+                        closeDialog();
+                    }
+                });
             };
 
-            // iOS Detection
             useEffect(() => {
                 const checkIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 const isStandalone = window.navigator.standalone === true;
@@ -683,6 +843,11 @@
                     if (selectedBtn) selectedBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 }
             }, [selectedDayIndex]);
+
+            const dayCityMap = {
+                0: 'kyoto', 1: 'kyoto', 2: 'kyoto', 3: 'nara', 4: 'kyoto',
+                5: 'kyoto', 6: 'osaka', 7: 'osaka', 8: 'osaka', 9: 'osaka'
+            };
 
             const tripData = {
                 flights: [ { type: '去程', date: '12/15 (一)', flight: '樂桃 MM026', dep: 'TPE 13:40 (桃機 T1)', arr: 'KIX 17:05 (關西)', note: '抵達後領行李約 18:00，搭 Haruka 往京都' }, { type: '回程', date: '12/24 (三)', flight: '樂桃 MM025', dep: 'KIX 10:10 (關西 T2)', arr: 'TPE 12:45 (桃機)', note: '08:10 前需抵達機場' } ],
@@ -806,20 +971,9 @@
                 return <Button3D onClick={handleCopy} color="white" className="ml-2 px-3 py-1 text-xs h-8">{copied ? <Icons.Check size={14} className="mr-1"/> : <Icons.Copy size={14} className="mr-1"/>}{copied ? '已複製' : '複製'}</Button3D>;
             };
 
-            // 置頂按鈕邏輯：使用 scrollTo 滾動 mainContentRef
             const scrollToTop = () => {
                 if (mainContentRef.current) {
                     mainContentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-            };
-
-            // 強制開啟全螢幕 (嘗試跳出 iframe)
-            const openFullScreen = () => {
-                // Check if in iframe
-                if (window.self !== window.top) {
-                   window.open(window.location.href, '_blank');
-                } else {
-                    alert('已經是獨立視窗囉！請使用瀏覽器的「加入主畫面」功能來獲得最佳體驗。');
                 }
             };
 
@@ -835,6 +989,15 @@
                     <SakuraRain />
                     
                     {showSplash && <SplashScreen />}
+                    
+                    {/* Dialog Component Instance */}
+                    <Dialog 
+                        isOpen={dialog.isOpen} 
+                        type={dialog.type} 
+                        message={dialog.message} 
+                        onConfirm={dialog.onConfirm} 
+                        onCancel={closeDialog} 
+                    />
 
                     {/* Header */}
                     <header className="bg-pink-100/90 backdrop-blur-md p-2 sticky top-0 z-50 border-b-2 border-pink-200 border-dashed shadow-sm flex-shrink-0">
@@ -846,7 +1009,6 @@
                                 <p className="text-[10px] text-gray-500 mt-0.5 font-bold ml-1">2025.12.15 - 12.24 (10天)</p>
                             </div>
                             <div className="flex gap-2">
-                                {/* 下載 App 按鈕 */}
                                 {isIos && (
                                     <Button3D onClick={() => setShowInstallModal(true)} color="white" className="w-8 h-8 p-0 text-blue-500 animate-pulse">
                                         <Icons.Download size={16} />
@@ -858,7 +1020,7 @@
                         </div>
                         
                         <div className="flex space-x-1 overflow-x-auto pb-2 no-scrollbar justify-between">
-                            {[{ id: 'itinerary', label: '行程', icon: Icons.Calendar }, { id: 'info', label: '資訊', icon: Icons.Hotel }, { id: 'transport', label: '交通', icon: Icons.MapPin }, { id: 'budget', label: '預算', icon: Icons.Wallet }].map((tab) => (
+                            {[{ id: 'itinerary', label: '行程', icon: Icons.Calendar }, { id: 'info', label: '資訊', icon: Icons.Hotel }, { id: 'weather', label: '天氣', icon: Icons.CloudSun }, { id: 'transport', label: '交通', icon: Icons.MapPin }, { id: 'budget', label: '預算', icon: Icons.Wallet }].map((tab) => (
                                 <Button3D key={tab.id} onClick={() => setActiveTab(tab.id)} isActive={activeTab === tab.id} color={activeTab === tab.id ? "pink" : "white"} className="flex-1 py-1 px-1 text-[10px]">
                                     <span className="flex flex-row items-center justify-center gap-1"><tab.icon size={14} />{tab.label}</span>
                                 </Button3D>
@@ -886,7 +1048,6 @@
                                                     </div>
                                                     {day.note && <div className="mb-6 bg-yellow-50/60 border-l-4 border-yellow-300 p-3 text-xs text-gray-600 rounded-r-lg flex gap-2 items-start shadow-sm backdrop-blur-sm"><Icons.Info size={14} className="shrink-0 mt-0.5 text-yellow-500"/> <span className="leading-relaxed">{day.note}</span></div>}
                                                     
-                                                    {/* 互動式行程列表 */}
                                                     <div className="space-y-6 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200/60">
                                                         {day.activities.map((act, i) => {
                                                             const isDone = completedActivities[`${selectedDayIndex}-${i}`];
@@ -908,8 +1069,7 @@
                                                         <div className="absolute top-0 left-[-24px] right-[-24px] h-3 bg-pink-100 opacity-30 transform -rotate-1"></div>
                                                         {day.details && <div className="space-y-3 mt-4"><h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1"><Icons.Bus size={12}/> 交通 & 備註</h4>{day.details.map((detail, dIdx) => (<div key={dIdx} className="bg-white/30 p-3 rounded-xl text-sm text-gray-600 border border-gray-100/60 flex gap-2 items-start backdrop-blur-sm"><span className="text-pink-400 mt-1">•</span><span className="leading-relaxed">{detail.text}</span></div>))}</div>}
                                                         
-                                                        {/* 景點攻略 */}
-                                                        {day.spots && day.spots.length > 0 && <div className="space-y-3 mt-6"><h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1"><Icons.Camera size={12}/> 景點攻略</h4>{day.spots.map((spot, sIdx) => (<div key={sIdx} className="bg-white/40 border border-blue-100/60 rounded-xl p-4 shadow-sm backdrop-blur-sm"><div className="flex justify-between items-center mb-2 border-b border-dashed border-gray-100/60 pb-2"><h5 className="font-bold text-gray-700 flex items-center gap-1"><Icons.MapPin size={14} className="text-blue-400"/> {spot.name}</h5><a href={spot.mapUrl} target="_blank" rel="noreferrer" className="text-[10px] bg-blue-50/50 text-blue-500 border border-blue-100/50 px-2 py-1 rounded-lg flex items-center gap-1"><Icons.Navigation size={10}/> 導航</a></div><div className="text-xs text-gray-600 leading-relaxed mb-2 flex gap-2 items-start"><Icons.Star size={12} className="text-yellow-400 shrink-0 mt-0.5 fill-yellow-400"/><span><span className="font-bold text-gray-700">必做：</span>{spot.highlights.join('、')}</span></div><div className="text-xs text-gray-500 bg-orange-50/50 p-2 rounded-lg flex gap-2 items-start border border-orange-100/50"><Icons.Sparkles size={12} className="text-orange-400 shrink-0 mt-0.5"/><span><span className="font-bold text-orange-500">Tips:</span> {spot.tips}</span></div></div>))}</div>}
+                                                        {day.spots && day.spots.length > 0 && <div className="space-y-3 mt-6"><h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1"><Icons.Camera size={12}/> 景點攻略</h4>{day.spots.map((spot, sIdx) => (<div key={sIdx} className="bg-white/40 border border-blue-100/60 rounded-xl p-4 shadow-sm backdrop-blur-sm"><div className="flex justify-between items-start mb-2 border-b border-dashed border-gray-100/60 pb-2"><h5 className="font-bold text-gray-700 flex items-center gap-1 flex-1"><Icons.MapPin size={14} className="text-blue-400 shrink-0"/> {spot.name} <SpotWeatherBadge city={dayCityMap[selectedDayIndex]} /></h5><div className="flex gap-1 shrink-0 ml-2"><a href={`https://www.youtube.com/results?search_query=${encodeURIComponent(spot.name + " ライブカメラ")}&sp=EgJAAQ%253D%253D`} target="_blank" rel="noreferrer" className="text-[10px] bg-red-50/50 text-red-500 border border-red-100/50 px-2 py-1 rounded-lg flex items-center gap-1 hover:bg-red-100 transition-colors"><Icons.Video size={10}/> 觀看人潮</a><a href={spot.mapUrl} target="_blank" rel="noreferrer" className="text-[10px] bg-blue-50/50 text-blue-500 border border-blue-100/50 px-2 py-1 rounded-lg flex items-center gap-1 hover:bg-blue-100 transition-colors"><Icons.Navigation size={10}/> 導航</a></div></div><div className="text-xs text-gray-600 leading-relaxed mb-2 flex gap-2 items-start"><Icons.Star size={12} className="text-yellow-400 shrink-0 mt-0.5 fill-yellow-400"/><span><span className="font-bold text-gray-700">必做：</span>{spot.highlights.join('、')}</span></div><div className="text-xs text-gray-500 bg-orange-50/50 p-2 rounded-lg flex gap-2 items-start border border-orange-100/50"><Icons.Sparkles size={12} className="text-orange-400 shrink-0 mt-0.5"/><span><span className="font-bold text-orange-500">Tips:</span> {spot.tips}</span></div></div>))}</div>}
                                                     </div>
                                                 </div>
                                             </LaceCard>
@@ -926,6 +1086,23 @@
                             </div>
                         )}
 
+                        {activeTab === 'weather' && (
+                            <div className="space-y-4 animate-fadeIn pb-8">
+                                <div className="flex justify-center mb-4">
+                                    <button onClick={requestLocation} disabled={locLoading} className={`bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 active:scale-95 transition-transform ${locLoading ? 'opacity-70 cursor-not-allowed' : ''}`}>
+                                        {locLoading ? <span className="animate-pulse">定位中...</span> : <><Icons.MapPin size={16}/> 更新我的位置</>}
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="col-span-2"><WeatherCard title="目前位置" lat={weatherLoc?.lat} lon={weatherLoc?.lon} isCurrent={true} /></div>
+                                    <WeatherCard title="大阪" lat={34.6937} lon={135.5023} />
+                                    <WeatherCard title="京都" lat={35.0116} lon={135.7681} />
+                                    <div className="col-span-2"><WeatherCard title="東京" lat={35.6895} lon={139.6917} /></div>
+                                </div>
+                                <div className="text-center text-[10px] text-gray-400 mt-4">資料來源：日本氣象廳 (JMA) via Open-Meteo</div>
+                            </div>
+                        )}
+
                         {activeTab === 'transport' && (
                             <div className="space-y-4 animate-fadeIn pb-8">
                                 <div className="bg-white/40 backdrop-blur-md border-l-4 border-blue-300 p-4 rounded-xl text-sm text-gray-600 shadow-sm flex gap-3"><Icons.Info size={20} className="shrink-0 text-blue-400"/><p>這裡是行程中較複雜的交通方式整理，建議出發前再次確認時刻表。</p></div>
@@ -936,6 +1113,25 @@
 
                         {activeTab === 'budget' && (
                             <div className="animate-fadeIn space-y-4 pb-8">
+                                <LaceCard color="orange" icon={<Icons.Wallet className="w-full h-full"/>}>
+                                    <div className="p-5 relative z-10">
+                                        <div className="flex justify-between items-center mb-4 border-b border-dashed border-gray-200/60 pb-2">
+                                             <h3 className="font-bold text-gray-800 flex items-center gap-2"><Icons.Wallet size={18} className="text-orange-500"/> 即時匯率計算</h3>
+                                             <button onClick={fetchRate} disabled={isRateLoading} className="text-[10px] bg-orange-100 text-orange-600 px-2 py-1 rounded-lg flex items-center gap-1 hover:bg-orange-200 transition-colors">{isRateLoading ? '更新中...' : <span className="flex items-center gap-1"><Icons.Sparkles size={10}/> 更新匯率</span>}</button>
+                                        </div>
+                                        <div className="flex items-center gap-2 mb-4">
+                                             <div className="flex-1"><label className="text-xs text-gray-500 block mb-1 font-bold">日幣 (JPY)</label><input type="number" value={jpyAmount} onChange={(e) => setJpyAmount(e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-lg font-bold text-gray-700 focus:outline-none focus:border-orange-300" placeholder="¥"/></div>
+                                             <div className="pt-5 text-gray-400"><Icons.ArrowRight size={16}/></div>
+                                             <div className="flex-1"><label className="text-xs text-gray-500 block mb-1 font-bold">台幣 (TWD)</label><div className="w-full bg-orange-50 border border-orange-100 rounded-xl px-3 py-2 text-lg font-bold text-orange-600">${jpyAmount ? Math.round(jpyAmount * exchangeRate).toLocaleString() : '0'}</div></div>
+                                        </div>
+                                        <div className="flex items-center gap-2 bg-gray-50/80 p-2 rounded-lg">
+                                            <span className="text-xs text-gray-500 whitespace-nowrap">目前匯率:</span>
+                                            <input type="number" step="0.0001" value={exchangeRate} onChange={(e) => setExchangeRate(parseFloat(e.target.value))} className="w-20 bg-white border border-gray-200 rounded px-1 py-0.5 text-xs text-gray-600 focus:outline-none text-center" />
+                                            <span className="text-[10px] text-gray-400 ml-auto">可手動調整</span>
+                                        </div>
+                                    </div>
+                                </LaceCard>
+
                                 <LaceCard color="green" icon={<Icons.Wallet className="w-full h-full"/>}><div className="p-5 relative z-10"><h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2 border-b border-dashed border-gray-200/60 pb-3"><Icons.Wallet size={18} className="text-green-500"/> 固定支出 (機票+住宿)</h3><div className="space-y-6"><div><div className="flex justify-between items-center mb-2"><span className="font-bold text-gray-700 flex items-center gap-2"><span className="w-2 h-2 bg-green-400 rounded-full"></span> Danny (單人房)</span><span className="text-xl font-bold text-green-600 font-mono">$28,787</span></div><div className="text-xs text-gray-500 flex justify-between bg-white/60 p-3 rounded-xl border border-gray-200/60"><span>機票: 6860</span><span>京都: 7647</span><span>大阪: 14280</span></div></div><div className="border-b border-dashed border-gray-200/60"></div><div><div className="flex justify-between items-center mb-2"><span className="font-bold text-gray-700 flex items-center gap-2"><span className="w-2 h-2 bg-green-400 rounded-full"></span> 娟 + 蓁 (每人)</span><span className="text-xl font-bold text-green-600 font-mono">$18,828</span></div><div className="text-xs text-gray-500 flex justify-between bg-white/60 p-3 rounded-xl border border-gray-200/60"><span>機票: 6860</span><span>京都: 4093</span><span>大阪: 7875</span></div></div></div></div></LaceCard>
                                 <div className="bg-white/40 backdrop-blur-md p-4 rounded-2xl text-center border-2 border-gray-100/50 border-dashed text-gray-400 text-sm"><Icons.Info size={14} className="inline mr-1 mb-0.5"/> 以上僅含機票與住宿，不含當地交通與餐食。</div>
                             </div>
@@ -948,7 +1144,7 @@
                             </>
                         )}
                         {showInstallModal && <IOSInstallGuide onClose={() => setShowInstallModal(false)} />}
-                        <ChatModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} itinerary={tripData} />
+                        <ChatModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} itinerary={tripData} apiKey={apiKey} setApiKey={setApiKey} />
                     </main>
                 </div>
             );
