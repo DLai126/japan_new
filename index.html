@@ -355,26 +355,19 @@
             const googleImageSearchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(name)}`;
             const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(name)}`;
             
-            // Dynamic pastel colors for tags
             const tagColors = ["bg-red-50 text-red-500 border-red-100", "bg-orange-50 text-orange-500 border-orange-100", "bg-green-50 text-green-500 border-green-100", "bg-blue-50 text-blue-500 border-blue-100", "bg-purple-50 text-purple-500 border-purple-100"];
 
             return (
                 <div className="bg-white rounded-2xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg transition-shadow duration-300 my-4 flex flex-col animate-pop-in relative">
-                    {/* Visual Header - Clickable for Images */}
                     <a href={googleImageSearchUrl} target="_blank" rel="noreferrer" className="h-32 bg-gradient-to-br from-orange-50 via-white to-pink-50 flex items-center justify-center relative overflow-hidden group cursor-pointer">
-                         {/* Decorative Background Pattern */}
                         <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(#fda4af 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
-                        
                         <div className="text-6xl transform group-hover:scale-110 transition-transform duration-300 drop-shadow-md z-10">{emoji || '🎁'}</div>
-                        
-                        {/* Overlay Label */}
                         <div className="absolute bottom-2 right-2 bg-white/80 backdrop-blur-sm text-pink-500 text-[10px] px-2 py-1 rounded-full border border-pink-100 flex items-center gap-1 shadow-sm group-hover:bg-pink-50 transition-colors">
                             <Icons.Image size={10} /> 查看實物照片
                         </div>
                     </a>
                     
                     <div className="p-5 flex-1 flex flex-col relative">
-                        {/* Price Badge (Top Right) */}
                         <div className="absolute top-[-12px] right-4 bg-white border border-gray-100 shadow-sm px-3 py-1 rounded-full flex items-center gap-1">
                              <span className="text-xs font-bold text-gray-700">{price}</span>
                         </div>
@@ -383,7 +376,6 @@
                             <h4 className="font-bold text-gray-800 text-lg leading-tight line-clamp-2">{name}</h4>
                         </div>
                         
-                         {/* Score */}
                         {score && (
                             <div className="flex items-center gap-1 mb-3">
                                 {[...Array(5)].map((_, i) => (
@@ -393,7 +385,6 @@
                             </div>
                         )}
                         
-                        {/* Reason Speech Bubble */}
                         {reason && (
                             <div className="bg-pink-50/60 p-3 rounded-xl rounded-tl-none border border-pink-100 mb-3 text-xs text-gray-600 relative mt-1">
                                 <div className="absolute -top-2 left-0 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-pink-50/60"></div>
@@ -1343,12 +1334,12 @@
 
                 const prompt = `
                 你是日本旅遊小幫手。請分析這張圖片（可能是菜單、路牌、或商品）。
+
+                請依照以下格式回答：
+                1. **原文對照**：列出圖片中識別到的日文關鍵字或菜名。
+                2. **中文翻譯與介紹**：對應的繁體中文翻譯，並簡單介紹特色或指示內容。
                 
-                1. 如果是**菜單**：請翻譯主要菜名，並簡單介紹特色。
-                2. 如果是**路牌/標示**：請翻譯警示或指示內容。
-                3. 如果是**商品**：請說明這是什麼。
-                
-                請用繁體中文回答，語氣親切，簡潔明瞭（150字內）。
+                語氣親切，簡潔明瞭（200字內）。
                 `;
 
                 try {
@@ -1799,7 +1790,7 @@
                                                 <input 
                                                     type="file" 
                                                     accept="image/*" 
-                                                    capture="environment"
+                                                    // capture="environment" // Removed to allow gallery selection
                                                     onChange={handleImageChange}
                                                     className="hidden" 
                                                     id="vision-input"
