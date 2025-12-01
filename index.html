@@ -1333,13 +1333,18 @@
                 const base64Data = visionImage.split(',')[1];
 
                 const prompt = `
-                你是日本旅遊小幫手。請分析這張圖片（可能是菜單、路牌、或商品）。
+                你是日本旅遊小幫手。請分析這張圖片。
 
-                請依照以下格式回答：
-                1. **原文對照**：列出圖片中識別到的日文關鍵字或菜名。
-                2. **中文翻譯與介紹**：對應的繁體中文翻譯，並簡單介紹特色或指示內容。
+                1. **如果是菜單**：
+                請辨識圖片中的餐點名稱與價格，並依照以下格式清楚條列（請務必將日文與價格保留，方便使用者對照）：
                 
-                語氣親切，簡潔明瞭（200字內）。
+                - **[日文菜名]** 💰[價格]
+                  (中文翻譯) 簡單介紹口味或食材特色
+
+                2. **如果是路牌、告示或商品**：
+                請直接翻譯上面的文字，並說明其用途或注意事項。
+                
+                請用繁體中文回答，語氣親切，協助旅客順利點餐或理解。
                 `;
 
                 try {
@@ -1823,7 +1828,7 @@
                                                 <div className="bg-white/80 p-4 rounded-xl border border-purple-200 text-sm text-gray-700 leading-relaxed animate-fadeIn shadow-sm">
                                                     <div className="flex gap-2 items-start">
                                                         <Icons.Sparkles size={16} className="text-purple-500 shrink-0 mt-0.5"/>
-                                                        <div className="whitespace-pre-wrap">{visionResult}</div>
+                                                        <div className="w-full"><MessageContent text={visionResult} /></div>
                                                     </div>
                                                 </div>
                                             )}
