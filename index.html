@@ -33,11 +33,16 @@
                         'spin-slow': 'spin 4s linear infinite',
                         'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'grow-width': 'growWidth 1s ease-out forwards',
+                        'pop-in': 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
                     },
                     keyframes: {
                         fadeIn: {
                             '0%': { opacity: '0', transform: 'translateY(10px)' },
                             '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        popIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.9)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
                         },
                         float: {
                             '0%, 100%': { transform: 'translateY(0)' },
@@ -170,7 +175,7 @@
             Sparkles: (props) => <IconBase {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275-1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></IconBase>,
             Send: (props) => <IconBase {...props}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></IconBase>,
             Key: (props) => <IconBase {...props}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></IconBase>,
-            Settings: (props) => <IconBase {...props}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></IconBase>,
+            Settings: (props) => <IconBase {...props}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></IconBase>,
             Trash2: (props) => <IconBase {...props}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></IconBase>,
             PenTool: (props) => <IconBase {...props}><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></IconBase>,
             Share: (props) => <IconBase {...props}><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></IconBase>,
@@ -183,7 +188,9 @@
             Video: (props) => <IconBase {...props}><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></IconBase>,
             MessageCircle: (props) => <IconBase {...props}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></IconBase>,
             Gift: (props) => <IconBase {...props}><polyline points="20 12 20 22 4 22 4 12" /><rect x="2" y="7" width="20" height="5" /><line x1="12" y1="22" x2="12" y2="7" /><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" /><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" /></IconBase>,
-            Image: (props) => <IconBase {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></IconBase>
+            Image: (props) => <IconBase {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></IconBase>,
+            Search: (props) => <IconBase {...props}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></IconBase>,
+            ExternalLinkSolid: (props) => <IconBase {...props}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></IconBase>
         };
 
         // --- SVGs ---
@@ -344,7 +351,116 @@
             }
         };
 
+        const RecommendationCard = ({ name, score, price, desc, url, tags, emoji, reason }) => {
+            const googleImageSearchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(name)}`;
+            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(name)}`;
+            
+            // Dynamic pastel colors for tags
+            const tagColors = ["bg-red-50 text-red-500 border-red-100", "bg-orange-50 text-orange-500 border-orange-100", "bg-green-50 text-green-500 border-green-100", "bg-blue-50 text-blue-500 border-blue-100", "bg-purple-50 text-purple-500 border-purple-100"];
+
+            return (
+                <div className="bg-white rounded-2xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg transition-shadow duration-300 my-4 flex flex-col animate-pop-in relative">
+                    {/* Visual Header - Clickable for Images */}
+                    <a href={googleImageSearchUrl} target="_blank" rel="noreferrer" className="h-32 bg-gradient-to-br from-orange-50 via-white to-pink-50 flex items-center justify-center relative overflow-hidden group cursor-pointer">
+                         {/* Decorative Background Pattern */}
+                        <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(#fda4af 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
+                        
+                        <div className="text-6xl transform group-hover:scale-110 transition-transform duration-300 drop-shadow-md z-10">{emoji || '🎁'}</div>
+                        
+                        {/* Overlay Label */}
+                        <div className="absolute bottom-2 right-2 bg-white/80 backdrop-blur-sm text-pink-500 text-[10px] px-2 py-1 rounded-full border border-pink-100 flex items-center gap-1 shadow-sm group-hover:bg-pink-50 transition-colors">
+                            <Icons.Image size={10} /> 查看實物照片
+                        </div>
+                    </a>
+                    
+                    <div className="p-5 flex-1 flex flex-col relative">
+                        {/* Price Badge (Top Right) */}
+                        <div className="absolute top-[-12px] right-4 bg-white border border-gray-100 shadow-sm px-3 py-1 rounded-full flex items-center gap-1">
+                             <span className="text-xs font-bold text-gray-700">{price}</span>
+                        </div>
+
+                        <div className="flex justify-between items-start mb-2 mt-1">
+                            <h4 className="font-bold text-gray-800 text-lg leading-tight line-clamp-2">{name}</h4>
+                        </div>
+                        
+                         {/* Score */}
+                        {score && (
+                            <div className="flex items-center gap-1 mb-3">
+                                {[...Array(5)].map((_, i) => (
+                                    <Icons.Star key={i} size={12} className={`${i < Math.floor(score) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`} />
+                                ))}
+                                <span className="text-xs font-bold text-gray-400 ml-1">{score}</span>
+                            </div>
+                        )}
+                        
+                        {/* Reason Speech Bubble */}
+                        {reason && (
+                            <div className="bg-pink-50/60 p-3 rounded-xl rounded-tl-none border border-pink-100 mb-3 text-xs text-gray-600 relative mt-1">
+                                <div className="absolute -top-2 left-0 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-pink-50/60"></div>
+                                <span className="font-bold text-pink-500 block mb-0.5">💡 推薦理由：</span>
+                                {reason}
+                            </div>
+                        )}
+                        
+                        <p className="text-xs text-gray-500 leading-relaxed mb-4 line-clamp-2">{desc}</p>
+                        
+                        {tags && tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mb-4">
+                                {tags.map((tag, i) => (
+                                    <span key={i} className={`text-[10px] px-2 py-0.5 rounded-full border ${tagColors[i % tagColors.length]}`}>#{tag}</span>
+                                ))}
+                            </div>
+                        )}
+                        
+                        <div className="flex gap-2 mt-auto pt-3 border-t border-dashed border-gray-100">
+                            <a href={url || `https://www.google.com/maps/search/?api=1&query=${name}`} target="_blank" rel="noreferrer" className="flex-1 bg-blue-50 text-blue-500 py-2 rounded-xl text-xs font-bold flex items-center justify-center hover:bg-blue-100 transition-colors gap-1 border border-blue-100">
+                                <Icons.MapPin size={14} /> 找地圖
+                            </a>
+                             <a href={googleSearchUrl} target="_blank" rel="noreferrer" className="flex-1 bg-gray-50 text-gray-500 py-2 rounded-xl text-xs font-bold flex items-center justify-center hover:bg-gray-100 transition-colors gap-1 border border-gray-200">
+                                <Icons.ExternalLinkSolid size={14} /> 更多資訊
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const MessageContent = ({ text }) => {
+            const tryParseJson = (str) => {
+                try {
+                    const start = str.indexOf('[');
+                    const end = str.lastIndexOf(']');
+                    if (start !== -1 && end !== -1 && end > start) {
+                        const jsonStr = str.substring(start, end + 1);
+                        const parsed = JSON.parse(jsonStr);
+                        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].name) {
+                            return parsed;
+                        }
+                    }
+                } catch (e) {
+                    return null;
+                }
+                return null;
+            };
+
+            const recommendations = tryParseJson(text);
+
+            if (recommendations) {
+                const start = text.indexOf('[');
+                const introText = start > 0 ? text.substring(0, start).trim() : "";
+                
+                return (
+                    <div className="w-full">
+                        {introText && <div className="mb-3 whitespace-pre-wrap">{introText}</div>}
+                        <div className="space-y-2">
+                            {recommendations.map((rec, i) => (
+                                <RecommendationCard key={i} {...rec} />
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+            
             const urlRegex = /(https?:\/\/[^\s]+)/g;
             if (typeof text !== 'string') return <span>{String(text)}</span>;
             const parts = text.split(urlRegex);
@@ -621,17 +737,51 @@
                    - 格式：https://www.google.com/maps/search/?api=1&query={店名}
                    - 請直接貼上連結網址，不要使用 Markdown Link (不要用 [連結](url))，以便系統自動轉換為藍色按鈕。
 
+                【特殊指令：結構化推薦】
+                如果使用者詢問**「推薦餐廳」、「推薦美食」、「伴手禮」、「必買」或「景點」**等相關問題，**請務必只以 JSON 陣列格式回傳**，不要有額外的開場白或結尾，格式如下：
+                [
+                  {
+                    "name": "店名/商品名",
+                    "score": 4.5, // 數字 (1-5, 若無則估計)
+                    "price": "¥1000-¥2000",
+                    "desc": "簡短特色說明 (30字內)",
+                    "url": "Google Maps 連結",
+                    "tags": ["必吃", "排隊名店"], // 字串陣列
+                    "emoji": "🍜", // 代表該項目的 Emoji
+                    "reason": "為什麼適合這個對象的簡短理由" // 新增：推薦理由
+                  }
+                ]
+                如果不涉及推薦列表，則用一般文字回答。
+
                 【使用者問題】
                 ${input}
 
                 【回答規範】
                 1. 語氣：活潑可愛，繁體中文。
-                2. 格式：推薦店家請列出「店名」、「距離」、「評價」與「連結」。
-                3. **精簡：回答請控制在 150 字內，不要一次給太多資訊。**
+                2. 內容精簡，若非推薦列表，字數控制在 150 字內。
                 `;
                 
                 const aiResponseText = await callGemini(systemPrompt, apiKey);
-                setMessages(prev => [...prev, { role: "ai", text: aiResponseText }]);
+                
+                // Basic JSON sanitization for chat response
+                let cleanResponse = aiResponseText;
+                // Try to extract JSON part if it's mixed with text (fallback)
+                if (aiResponseText.includes('[') && aiResponseText.includes(']')) {
+                     const start = aiResponseText.indexOf('[');
+                     const end = aiResponseText.lastIndexOf(']');
+                     if (start !== -1 && end !== -1) {
+                         // Check if it looks like a JSON array response we want
+                         const potentialJson = aiResponseText.substring(start, end + 1);
+                         try {
+                             JSON.parse(potentialJson); // Check validity
+                             cleanResponse = potentialJson; // Use only the JSON part
+                         } catch(e) {
+                             // If parsing fails, keep original text, let MessageContent handle it or display raw
+                         }
+                     }
+                }
+                
+                setMessages(prev => [...prev, { role: "ai", text: cleanResponse }]);
                 setIsLoading(false);
             };
 
@@ -1218,23 +1368,53 @@
                 if (!souvenirRecipient.trim()) return;
 
                 setIsSuggestingSouvenir(true);
+                setSouvenirSuggestion(null);
+
                 const prompt = `
                 使用者想買日本關西（京都/大阪）的伴手禮送給：「${souvenirRecipient}」。
-                請推薦 3 款適合的伴手禮（需具體品牌或名稱，如：小倉山莊仙貝）。
+                請推薦 3 款適合的伴手禮（需具體品牌或名稱）。
+
+                重要指示：
+                1. 請分析「${souvenirRecipient}」這個輸入。如果使用者提到「藥妝」、「化妝品」、「美妝」，請務必推薦日本藥妝店的熱門商品（如面膜、眼藥水、保養品），不要推薦食物。
+                2. 如果使用者提到「長輩」、「小孩」或「愛吃甜食」，則推薦相應的食品或用品。
+                3. 若無特別指定類型，則推薦具代表性的關西名產。
                 
-                格式：
-                1. **名稱**: 特色簡介 (參考價格)
-                2. **名稱**: 特色簡介 (參考價格)
-                3. **名稱**: 特色簡介 (參考價格)
-                
-                請用繁體中文，語氣活潑。
+                【輸出格式】
+                請**務必**只回傳一段有效的 JSON 陣列，不要有 Markdown 標記 (如 \`\`\`json)，格式如下：
+                [
+                  {
+                    "name": "商品名稱",
+                    "price": "參考價格",
+                    "score": 4.8,
+                    "desc": "特色簡介 (30字內)",
+                    "tags": ["標籤1", "標籤2"],
+                    "emoji": "💄", // 代表該項目的 Emoji (請根據商品類型選擇，如藥妝用💄/💊，食物用🍘/🍵)
+                    "reason": "針對「${souvenirRecipient}」的推薦理由"
+                  }
+                ]
                 `;
 
                 try {
-                    const result = await callGemini(prompt, apiKey);
-                    setSouvenirSuggestion(result);
+                    const text = await callGemini(prompt, apiKey);
+                    // Clean up JSON string more aggressively
+                    let jsonStr = text.trim();
+                    // Remove markdown code blocks if present
+                    if (jsonStr.startsWith('```')) {
+                        jsonStr = jsonStr.replace(/```json|```/g, '').replace(/```/g, '');
+                    }
+                    // Find the first [ and last ]
+                    const start = jsonStr.indexOf('[');
+                    const end = jsonStr.lastIndexOf(']');
+                    if (start !== -1 && end !== -1) {
+                        jsonStr = jsonStr.substring(start, end + 1);
+                        const data = JSON.parse(jsonStr);
+                        setSouvenirSuggestion(data);
+                    } else {
+                        throw new Error("Invalid format");
+                    }
                 } catch (error) {
-                    setDialog({ isOpen: true, type: 'alert', message: "連線失敗 >_<", onConfirm: closeDialog });
+                    console.error(error);
+                    setDialog({ isOpen: true, type: 'alert', message: "連線失敗或格式錯誤 >_<", onConfirm: closeDialog });
                 }
                 setIsSuggestingSouvenir(false);
             };
@@ -1488,8 +1668,10 @@
                                                 </button>
                                             </div>
                                             {souvenirSuggestion && (
-                                                <div className="bg-white/60 p-3 rounded-xl border border-orange-100 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap animate-fadeIn">
-                                                    {souvenirSuggestion}
+                                                <div className="animate-fadeIn space-y-2">
+                                                    {Array.isArray(souvenirSuggestion) ? souvenirSuggestion.map((item, i) => (
+                                                        <RecommendationCard key={i} name={item.name} price={item.price} score={item.score} desc={item.desc} tags={item.tags} emoji={item.emoji} reason={item.reason} url={`https://www.google.com/maps/search/?api=1&query=${item.name}`} />
+                                                    )) : <div className="bg-white/60 p-3 rounded-xl border border-orange-100 text-sm text-gray-600">{JSON.stringify(souvenirSuggestion)}</div>}
                                                 </div>
                                             )}
                                         </div>
