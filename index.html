@@ -1271,11 +1271,14 @@
                 const prompt = `
                 你是日本旅遊小幫手。請分析這張圖片（可能是菜單、路牌、或商品）。
                 
+                **關鍵任務**：請仔細尋找圖片中是否有「店名」、「品牌名稱」或「Logo文字」。
+
                 請**務必**只回傳一段有效的 JSON 字串，不要有任何 Markdown 標記 (如 \`\`\`json)，根據圖片類型選擇以下格式：
 
                 1. **若是菜單 (Menu)**：
                 {
                   "type": "menu",
+                  "shop_name": "辨識到的店名 (若無則回傳 null)",
                   "items": [
                     { 
                       "original": "日文菜名", 
@@ -1289,6 +1292,7 @@
                 2. **若是其他 (Other)**：
                 {
                   "type": "general",
+                  "shop_name": "辨識到的店名或品牌 (若無則回傳 null)",
                   "title": "標題或主要文字 (日文)",
                   "translation": "繁體中文翻譯",
                   "desc": "說明用途或注意事項 (繁體中文)"
@@ -1790,14 +1794,31 @@
                                                             ) : (
                                                                 visionResult.type === 'menu' ? (
                                                                     <div className="space-y-4">
-                                                                        <div className="flex items-center gap-2 text-purple-600 font-bold border-b-2 border-purple-100 pb-2 mb-2">
-                                                                            <Icons.Coffee size={20}/> <span>菜單翻譯結果</span>
+                                                                        <div className="flex flex-col border-b-2 border-purple-100 pb-2 mb-2">
+                                                                            {visionResult.shop_name && (
+                                                                                <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                                                                                    <Icons.MapPin size={10} /> 偵測到店名：<span className="font-bold text-purple-600">{visionResult.shop_name}</span>
+                                                                                </div>
+                                                                            )}
+                                                                            <div className="flex items-center gap-2 text-purple-600 font-bold">
+                                                                                <Icons.Coffee size={20}/> <span>菜單翻譯結果</span>
+                                                                            </div>
                                                                         </div>
                                                                         {visionResult.items.map((item, idx) => (
                                                                             <div key={idx} className="border-b border-gray-100 last:border-0 pb-3 mb-3 last:mb-0 last:pb-0">
                                                                                 <div className="flex justify-between items-start">
                                                                                     <h5 className="font-bold text-gray-800 text-lg leading-tight">{item.original}</h5>
-                                                                                    <span className="font-mono text-pink-500 font-bold bg-pink-50 px-2 py-1 rounded-lg text-sm shrink-0 ml-2">{item.price}</span>
+                                                                                    <div className="flex flex-col items-end gap-1 ml-2">
+                                                                                        {item.price && <span className="font-mono text-pink-500 font-bold bg-pink-50 px-2 py-1 rounded-lg text-xs shrink-0">{item.price}</span>}
+                                                                                        <a 
+                                                                                            href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent((visionResult.shop_name ? visionResult.shop_name + " " : "") + item.original)}`}
+                                                                                            target="_blank" 
+                                                                                            rel="noreferrer"
+                                                                                            className="text-[10px] text-blue-500 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-lg hover:bg-blue-100 transition-colors shrink-0 border border-blue-100"
+                                                                                        >
+                                                                                            <Icons.Image size={10} /> 實物照
+                                                                                        </a>
+                                                                                    </div>
                                                                                 </div>
                                                                                 <div className="text-purple-600 font-bold text-sm mt-1 flex items-center gap-1">
                                                                                     <span className="w-1 h-4 bg-purple-300 rounded-full inline-block"></span>
@@ -1809,7 +1830,18 @@
                                                                     </div>
                                                                 ) : (
                                                                      <div className="space-y-2">
-                                                                        <h4 className="font-bold text-gray-800 text-lg">{visionResult.title}</h4>
+                                                                        <div className="flex justify-between items-start">
+                                                                            <h4 className="font-bold text-gray-800 text-lg">{visionResult.title}</h4>
+                                                                            <a 
+                                                                                href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent((visionResult.shop_name ? visionResult.shop_name + " " : "") + visionResult.title)}`}
+                                                                                target="_blank" 
+                                                                                rel="noreferrer"
+                                                                                className="text-[10px] text-blue-500 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-lg hover:bg-blue-100 transition-colors shrink-0 ml-2 border border-blue-100"
+                                                                            >
+                                                                                <Icons.Image size={10} /> 實物照
+                                                                            </a>
+                                                                        </div>
+                                                                        {visionResult.shop_name && <div className="text-xs text-gray-400">店名/品牌: {visionResult.shop_name}</div>}
                                                                         <div className="bg-purple-50 p-3 rounded-xl text-purple-700 font-bold">
                                                                             {visionResult.translation}
                                                                         </div>
