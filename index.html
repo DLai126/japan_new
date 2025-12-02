@@ -172,7 +172,7 @@
             Camera: (props) => <IconBase {...props}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></IconBase>,
             Navigation: (props) => <IconBase {...props}><polygon points="3 11 22 2 13 21 11 13 3 11"/></IconBase>,
             Bus: (props) => <IconBase {...props}><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M5 22v-5"/><path d="M19 22v-5"/><path d="M3 11h18"/><path d="M10 15h4"/><path d="M7 6v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></IconBase>,
-            Sparkles: (props) => <IconBase {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></IconBase>,
+            Sparkles: (props) => <IconBase {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275-1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></IconBase>,
             Send: (props) => <IconBase {...props}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></IconBase>,
             Key: (props) => <IconBase {...props}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></IconBase>,
             Settings: (props) => <IconBase {...props}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></IconBase>,
@@ -351,8 +351,146 @@
             }
         };
 
+        const RecommendationCard = ({ name, score, price, desc, url, tags, emoji, reason }) => {
+            const googleImageSearchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(name)}`;
+            const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(name)}`;
+            
+            const tagColors = ["bg-red-50 text-red-500 border-red-100", "bg-orange-50 text-orange-500 border-orange-100", "bg-green-50 text-green-500 border-green-100", "bg-blue-50 text-blue-500 border-blue-100", "bg-purple-50 text-purple-500 border-purple-100"];
+
+            return (
+                <div className="bg-white rounded-2xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg transition-shadow duration-300 my-4 flex flex-col animate-pop-in relative">
+                    <a href={googleImageSearchUrl} target="_blank" rel="noreferrer" className="h-32 bg-gradient-to-br from-orange-50 via-white to-pink-50 flex items-center justify-center relative overflow-hidden group cursor-pointer">
+                        <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(#fda4af 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
+                        <div className="text-6xl transform group-hover:scale-110 transition-transform duration-300 drop-shadow-md z-10">{emoji || '🎁'}</div>
+                        <div className="absolute bottom-2 right-2 bg-white/80 backdrop-blur-sm text-pink-500 text-[10px] px-2 py-1 rounded-full border border-pink-100 flex items-center gap-1 shadow-sm group-hover:bg-pink-50 transition-colors">
+                            <Icons.Image size={10} /> 查看實物照片
+                        </div>
+                    </a>
+                    
+                    <div className="p-5 flex-1 flex flex-col relative">
+                        <div className="absolute top-[-12px] right-4 bg-white border border-gray-100 shadow-sm px-3 py-1 rounded-full flex items-center gap-1">
+                             <span className="text-xs font-bold text-gray-700">{price}</span>
+                        </div>
+
+                        <div className="flex justify-between items-start mb-2 mt-1">
+                            <h4 className="font-bold text-gray-800 text-lg leading-tight line-clamp-2">{name}</h4>
+                        </div>
+                        
+                        {score && (
+                            <div className="flex items-center gap-1 mb-3">
+                                {[...Array(5)].map((_, i) => (
+                                    <Icons.Star key={i} size={12} className={`${i < Math.floor(score) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`} />
+                                ))}
+                                <span className="text-xs font-bold text-gray-400 ml-1">{score}</span>
+                            </div>
+                        )}
+                        
+                        {reason && (
+                            <div className="bg-pink-50/60 p-3 rounded-xl rounded-tl-none border border-pink-100 mb-3 text-xs text-gray-600 relative mt-1">
+                                <div className="absolute -top-2 left-0 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-pink-50/60"></div>
+                                <span className="font-bold text-pink-500 block mb-0.5">💡 推薦理由：</span>
+                                {reason}
+                            </div>
+                        )}
+                        
+                        <p className="text-xs text-gray-500 leading-relaxed mb-4 line-clamp-2">{desc}</p>
+                        
+                        {tags && tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mb-4">
+                                {tags.map((tag, i) => (
+                                    <span key={i} className={`text-[10px] px-2 py-0.5 rounded-full border ${tagColors[i % tagColors.length]}`}>#{tag}</span>
+                                ))}
+                            </div>
+                        )}
+                        
+                        <div className="flex gap-2 mt-auto pt-3 border-t border-dashed border-gray-100">
+                            <a href={url || `https://www.google.com/maps/search/?api=1&query=${name}`} target="_blank" rel="noreferrer" className="flex-1 bg-blue-50 text-blue-500 py-2 rounded-xl text-xs font-bold flex items-center justify-center hover:bg-blue-100 transition-colors gap-1 border border-blue-100">
+                                <Icons.MapPin size={14} /> 找地圖
+                            </a>
+                             <a href={googleSearchUrl} target="_blank" rel="noreferrer" className="flex-1 bg-gray-50 text-gray-500 py-2 rounded-xl text-xs font-bold flex items-center justify-center hover:bg-gray-100 transition-colors gap-1 border border-gray-200">
+                                <Icons.ExternalLinkSolid size={14} /> 更多資訊
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const MessageContent = ({ text }) => {
+             // Helper to render JSON response for vision
+             if (typeof text === 'object' && text !== null) {
+                 if (text.type === 'menu' || text.type === 'general') {
+                    return (
+                        <div className="space-y-4">
+                            <div className="flex flex-col border-b-2 border-purple-100 pb-2 mb-2">
+                                {text.shop_name && (
+                                    <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                                        <Icons.MapPin size={10} /> 偵測到店名：<span className="font-bold text-purple-600">{text.shop_name}</span>
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-2 text-purple-600 font-bold">
+                                    {text.type === 'menu' ? <><Icons.Coffee size={20}/> <span>菜單翻譯結果</span></> : <><Icons.Info size={20}/> <span>辨識結果</span></>}
+                                </div>
+                            </div>
+                            {text.type === 'menu' && text.items && text.items.map((item, idx) => (
+                                <div key={idx} className="border-b border-gray-100 last:border-0 pb-3 mb-3 last:mb-0 last:pb-0">
+                                    <div className="flex justify-between items-start">
+                                        <h5 className="font-bold text-gray-800 text-lg leading-tight">{item.original}</h5>
+                                        <div className="flex flex-col items-end gap-1 ml-2">
+                                            {item.price && <span className="font-mono text-pink-500 font-bold bg-pink-50 px-2 py-1 rounded-lg text-xs shrink-0">{item.price}</span>}
+                                            <a 
+                                                href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent((text.shop_name ? text.shop_name + " " : "") + item.original)}`}
+                                                target="_blank" 
+                                                rel="noreferrer"
+                                                className="text-[10px] text-blue-500 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-lg hover:bg-blue-100 transition-colors shrink-0 border border-blue-100"
+                                            >
+                                                <Icons.Image size={10} /> 實物照
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div className="text-purple-600 font-bold text-sm mt-1 flex items-center gap-1">
+                                        <span className="w-1 h-4 bg-purple-300 rounded-full inline-block"></span>
+                                        {item.translation}
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1 leading-relaxed pl-2">{item.desc}</p>
+                                </div>
+                            ))}
+                            {text.type === 'general' && (
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-start">
+                                        <h4 className="font-bold text-gray-800 text-lg">{text.title}</h4>
+                                        <a 
+                                            href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent((text.shop_name ? text.shop_name + " " : "") + text.title)}`}
+                                            target="_blank" 
+                                            rel="noreferrer"
+                                            className="text-[10px] text-blue-500 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-lg hover:bg-blue-100 transition-colors shrink-0 ml-2 border border-blue-100"
+                                        >
+                                            <Icons.Image size={10} /> 實物照
+                                        </a>
+                                    </div>
+                                    <div className="bg-purple-50 p-3 rounded-xl text-purple-700 font-bold">
+                                        {text.translation}
+                                    </div>
+                                    <p className="text-sm text-gray-600 leading-relaxed">{text.desc}</p>
+                                </div>
+                            )}
+                        </div>
+                    );
+                 }
+                 // Fallback for other objects (e.g. pure JSON array)
+                 if (Array.isArray(text)) {
+                     return (
+                        <div className="space-y-2">
+                            {text.map((rec, i) => (
+                                <RecommendationCard key={i} {...rec} />
+                            ))}
+                        </div>
+                     );
+                 }
+             }
+            
             const tryParseJson = (str) => {
+                if (typeof str !== 'string') return null;
                 try {
                     const start = str.indexOf('[');
                     const end = str.lastIndexOf(']');
@@ -387,31 +525,56 @@
                 );
             }
             
-            const urlRegex = /(https?:\/\/[^\s]+)/g;
-            if (typeof text !== 'string') return <span>{String(text)}</span>;
-            const parts = text.split(urlRegex);
+            const processText = (inputText) => {
+                if (typeof inputText !== 'string') return String(inputText);
+                
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                
+                // Split by new lines
+                return inputText.split('\n').map((line, lineIdx) => {
+                    // Check for bullet points
+                    const isBullet = line.trim().startsWith('- ') || line.trim().startsWith('* ');
+                    const cleanLine = isBullet ? line.trim().substring(2) : line;
+                    
+                    // Split by bold markers (**...**)
+                    const parts = cleanLine.split(/(\*\*.*?\*\*)/g);
+                    
+                    const content = parts.map((part, partIdx) => {
+                        if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+                            return <strong key={partIdx} className="text-pink-600 font-bold">{part.slice(2, -2)}</strong>;
+                        }
+                        
+                        const urlParts = part.split(urlRegex);
+                        
+                        if (urlParts.length === 1) return part;
+
+                        return urlParts.map((subPart, subIdx) => {
+                            if (subPart.match(urlRegex)) {
+                                 const isMaps = subPart.includes('google.com/maps');
+                                 return (
+                                     <a key={subIdx} href={subPart} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all inline-flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded-md text-xs font-bold mx-0.5">
+                                         {isMaps ? <Icons.MapPin size={10}/> : <Icons.ExternalLink size={10}/>}
+                                         {isMaps ? '地圖' : '連結'}
+                                     </a>
+                                 );
+                            }
+                            return subPart;
+                        });
+                    });
+
+                    if (isBullet) {
+                        return <li key={lineIdx} className="ml-4 list-disc marker:text-pink-300 mb-1 text-sm leading-relaxed pl-1">{content}</li>;
+                    }
+                    if (!line.trim()) return <div key={lineIdx} className="h-2"></div>;
+                    
+                    return <div key={lineIdx} className={`min-h-[1.2em] text-sm leading-relaxed ${lineIdx > 0 ? 'mt-0.5' : ''}`}>{content}</div>;
+                });
+            };
 
             return (
-                <span>
-                    {parts.map((part, i) => {
-                        if (part.match(urlRegex)) {
-                            const isMaps = part.includes('google.com/maps');
-                            return (
-                                <a 
-                                    key={i} 
-                                    href={part} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
-                                    className={`break-all font-bold hover:underline ${isMaps ? 'text-blue-600' : 'text-blue-500'}`}
-                                    onClick={(e) => e.stopPropagation()} 
-                                >
-                                    {isMaps ? '🗺️ 開啟地圖' : '🔗 連結'}
-                                </a>
-                            );
-                        }
-                        return part;
-                    })}
-                </span>
+                <div className="w-full">
+                    {processText(text)}
+                </div>
             );
         };
 
