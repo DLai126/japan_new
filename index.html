@@ -34,7 +34,6 @@
                         'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'grow-width': 'growWidth 1s ease-out forwards',
                         'pop-in': 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
                     },
                     keyframes: {
                         fadeIn: {
@@ -51,12 +50,6 @@
                         },
                         growWidth: {
                             '0%': { width: '0%' },
-                        },
-                        shake: {
-                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
-                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
-                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
-                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
                         }
                     }
                 }
@@ -197,13 +190,7 @@
             Gift: (props) => <IconBase {...props}><polyline points="20 12 20 22 4 22 4 12" /><rect x="2" y="7" width="20" height="5" /><line x1="12" y1="22" x2="12" y2="7" /><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" /><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" /></IconBase>,
             Image: (props) => <IconBase {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></IconBase>,
             Search: (props) => <IconBase {...props}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></IconBase>,
-            ExternalLinkSolid: (props) => <IconBase {...props}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></IconBase>,
-            Briefcase: (props) => <IconBase {...props}><rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></IconBase>,
-            User: (props) => <IconBase {...props}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></IconBase>,
-            Smile: (props) => <IconBase {...props}><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" /></IconBase>,
-            Umbrella: (props) => <IconBase {...props}><path d="M23 12a11.05 11.05 0 0 0-22 0zm-5 7a3 3 0 0 1-6 0v-7" /></IconBase>,
-            Scroll: (props) => <IconBase {...props}><path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm-7 3v10" /><path d="M8 11h8" /><path d="M8 7h3" /><path d="M13 15h3" /></IconBase>,
-            Refresh: (props) => <IconBase {...props}><polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></IconBase>
+            ExternalLinkSolid: (props) => <IconBase {...props}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></IconBase>
         };
 
         // --- SVGs ---
@@ -884,24 +871,6 @@
             const [souvenirSuggestion, setSouvenirSuggestion] = useState(null);
             const [isSuggestingSouvenir, setIsSuggestingSouvenir] = useState(false);
             
-            // Packing List State
-            const [packingList, setPackingList] = useState(null);
-            const [isGeneratingList, setIsGeneratingList] = useState(false);
-
-            // Scenario Helper State
-            const [scenarioResult, setScenarioResult] = useState(null);
-            const [isGeneratingScenario, setIsGeneratingScenario] = useState(false);
-
-            // Emergency Plan State
-            const [isEmergencyOpen, setIsEmergencyOpen] = useState(false);
-            const [emergencyPlan, setEmergencyPlan] = useState(null);
-            const [isGeneratingEmergency, setIsGeneratingEmergency] = useState(false);
-            
-            // Omikuji State
-            const [isOmikujiOpen, setIsOmikujiOpen] = useState(false);
-            const [omikujiResult, setOmikujiResult] = useState(null);
-            const [isDrawingOmikuji, setIsDrawingOmikuji] = useState(false);
-
             // Dialog state
             const [dialog, setDialog] = useState({ isOpen: false, type: 'alert', message: '', onConfirm: null });
             const closeDialog = () => setDialog(prev => ({ ...prev, isOpen: false }));
@@ -952,8 +921,6 @@
                         if (savedActs) setCompletedActivities(JSON.parse(savedActs));
                         const savedBudget = localStorage.getItem('budget_analysis_v2');
                         if (savedBudget) setBudgetAnalysis(JSON.parse(savedBudget));
-                        const savedList = localStorage.getItem('packing_list_v1');
-                        if (savedList) setPackingList(JSON.parse(savedList));
                     }
                 } catch (e) { console.warn("Load failed", e); }
                 setIsDataLoaded(true);
@@ -978,11 +945,9 @@
                     onConfirm: () => {
                         setCompletedActivities({});
                         setBudgetAnalysis(null);
-                        setPackingList(null);
                         try { 
                             localStorage.removeItem('trip_acts_v3'); 
                             localStorage.removeItem('budget_analysis_v2');
-                            localStorage.removeItem('packing_list_v1');
                         } catch(e){}
                         closeDialog();
                     }
@@ -1352,74 +1317,6 @@
                 setIsVisionAnalyzing(false);
             };
 
-            // Gemini Smart Packing List Function
-            const handleGeneratePackingList = async () => {
-                if(!apiKey) { 
-                    setDialog({ isOpen: true, type: 'alert', message: "請先輸入 API Key 喔！", onConfirm: closeDialog }); return; 
-                }
-                setIsGeneratingList(true);
-
-                const prompt = `
-                請為這趟 10 天的京都大阪之旅（12月中旬）生成一份 **智慧行李清單**。
-                考慮因素：
-                - 天氣：寒冷 (5-12°C)
-                - 行程：環球影城 (戶外久站)、清水寺 (爬坡走路)、市區逛街
-                - 需求：3人旅遊
-
-                請**務必**只回傳一段有效的 JSON 字串，格式如下：
-                [
-                  { "category": "必備證件 & 錢", "items": ["護照", "日幣現金", "..."] },
-                  { "category": "衣物 (洋蔥式)", "items": ["發熱衣", "好走的鞋", "..."] },
-                  { "category": "電器 & 網卡", "items": ["轉接頭", "行動電源", "..."] },
-                  { "category": "藥品 & 雜物", "items": ["感冒藥", "暖暖包", "..."] }
-                ]
-                `;
-
-                try {
-                    const text = await callGemini(prompt, apiKey);
-                    const jsonStr = text.replace(/```json|```/g, '').trim();
-                    const data = JSON.parse(jsonStr);
-                    setPackingList(data);
-                    try { localStorage.setItem('packing_list_v1', JSON.stringify(data)); } catch (e) {}
-                } catch (error) {
-                    setDialog({ isOpen: true, type: 'alert', message: "清單生成失敗 >_<", onConfirm: closeDialog });
-                }
-                setIsGeneratingList(false);
-            };
-
-            // Gemini Scenario Helper Function
-            const handleGenerateScenario = async (scenario) => {
-                if(!apiKey) { 
-                    setDialog({ isOpen: true, type: 'alert', message: "請先輸入 API Key 喔！", onConfirm: closeDialog }); return; 
-                }
-                setIsGeneratingScenario(true);
-                setScenarioResult(null);
-
-                const prompt = `
-                生成一個日本旅遊情境對話指南。
-                情境：${scenario}
-
-                請**務必**只回傳一段有效的 JSON 字串，格式如下：
-                {
-                  "user_line": "遊客該說的話 (日文 + 羅馬拼音)",
-                  "user_line_cn": "中文翻譯",
-                  "staff_response": "對方可能回的話 (日文)",
-                  "staff_response_cn": "中文翻譯",
-                  "vocabulary": ["單字1: 意思", "單字2: 意思", "單字3: 意思"]
-                }
-                `;
-
-                try {
-                    const text = await callGemini(prompt, apiKey);
-                    const jsonStr = text.replace(/```json|```/g, '').trim();
-                    const data = JSON.parse(jsonStr);
-                    setScenarioResult(data);
-                } catch (error) {
-                    setDialog({ isOpen: true, type: 'alert', message: "生成失敗 >_<", onConfirm: closeDialog });
-                }
-                setIsGeneratingScenario(false);
-            };
-
             // Gemini Souvenir Suggestion Function
             const handleSuggestSouvenir = async () => {
                 if(!apiKey) { 
@@ -1554,177 +1451,6 @@
                 setAnalyzingBudget(false);
             };
 
-            // Emergency Plan Function
-            const handleEmergencyPlan = async (type) => {
-                 if(!apiKey) { 
-                    setDialog({ isOpen: true, type: 'alert', message: "請先輸入 API Key 喔！", onConfirm: closeDialog }); return; 
-                }
-                setIsGeneratingEmergency(true);
-                setEmergencyPlan(null);
-                
-                const day = tripData.itinerary[selectedDayIndex];
-                const city = dayCityMap[selectedDayIndex];
-
-                const prompt = `
-                我是你的日本旅遊導遊櫻花醬。
-                使用者現在位於 ${city === 'kyoto' ? '京都' : (city === 'osaka' ? '大阪' : '奈良')} (日期: ${day.date})。
-                使用者遇到了突發狀況：${type}。
-                原本的行程是：${day.title} (${day.activities.map(a=>a.content).join(', ')})。
-
-                請提供 **3 個替代方案** (室內景點、放鬆行程或美食)，幫助使用者度過難關。
-                
-                【輸出格式】
-                請**務必**只回傳一段有效的 JSON 字串，格式如下：
-                [
-                  {
-                    "title": "方案名稱 (如：躲進錦市場吃透透)",
-                    "desc": "詳細說明為什麼推薦這個方案，以及如何前往。",
-                    "icon": "☔" 
-                  },
-                  { "title": "...", "desc": "...", "icon": "☕" },
-                  { "title": "...", "desc": "...", "icon": "🧖‍♀️" }
-                ]
-                `;
-
-                try {
-                    const text = await callGemini(prompt, apiKey);
-                    const jsonStr = text.replace(/```json|```/g, '').trim();
-                    const data = JSON.parse(jsonStr);
-                    setEmergencyPlan(data);
-                } catch (error) {
-                     setDialog({ isOpen: true, type: 'alert', message: "生成失敗 >_<", onConfirm: closeDialog });
-                }
-                setIsGeneratingEmergency(false);
-            };
-            
-            // Omikuji Function
-            const handleOmikuji = async () => {
-                 if(!apiKey) { 
-                    setDialog({ isOpen: true, type: 'alert', message: "請先輸入 API Key 喔！", onConfirm: closeDialog }); return; 
-                }
-                setIsDrawingOmikuji(true);
-                setOmikujiResult(null);
-
-                const prompt = `
-                請扮演日本神社的巫女，為這位正在關西旅遊的遊客抽一支籤。
-                
-                【輸出格式】
-                請**務必**只回傳一段有效的 JSON 字串，格式如下：
-                {
-                  "result": "吉凶 (如：大吉、中吉、小吉、吉...)",
-                  "message": "一段籤詩或運勢解說 (繁體中文，語氣神祕優雅)",
-                  "lucky_item": "幸運物 (如：御守、抹茶...)",
-                  "lucky_color": "幸運色"
-                }
-                `;
-
-                try {
-                    // Simulate delay for "shaking" effect
-                    await new Promise(r => setTimeout(r, 1500));
-                    const text = await callGemini(prompt, apiKey);
-                    const jsonStr = text.replace(/```json|```/g, '').trim();
-                    const data = JSON.parse(jsonStr);
-                    setOmikujiResult(data);
-                } catch (error) {
-                     setDialog({ isOpen: true, type: 'alert', message: "求籤失敗，神明可能去午休了 >_<", onConfirm: closeDialog });
-                }
-                setIsDrawingOmikuji(false);
-            };
-
-            // New Modals
-            const EmergencyModal = () => {
-                if (!isEmergencyOpen) return null;
-                return (
-                     <div className="fixed inset-0 z-[5000] bg-black/50 backdrop-blur-sm flex items-end justify-center sm:items-center p-4 animate-fadeIn pb-safe">
-                        <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border-4 border-blue-200 relative max-h-[80vh]">
-                            <div className="bg-blue-50 p-4 border-b border-blue-100 flex justify-between items-center">
-                                <h3 className="font-bold text-blue-600 text-lg flex items-center gap-2"><Icons.Umbrella size={20}/> 行程急轉彎</h3>
-                                <button onClick={() => setIsEmergencyOpen(false)} className="w-8 h-8 flex items-center justify-center bg-white rounded-full text-gray-400 hover:text-gray-600"><Icons.X size={20}/></button>
-                            </div>
-                            <div className="p-5 overflow-y-auto">
-                                {!emergencyPlan ? (
-                                    <>
-                                        <p className="text-sm text-gray-600 mb-4 text-center">發生什麼事了？櫻花醬幫你重新規劃！</p>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {[
-                                                { label: '下雨了 ☔', type: '下大雨無法在戶外' },
-                                                { label: '腳好痠 🦶', type: '太累了想找地方休息' },
-                                                { label: '肚子餓 🍱', type: '想找附近的必吃美食' },
-                                                { label: '睡過頭 😴', type: '時間不夠，需要縮短行程' }
-                                            ].map((opt, i) => (
-                                                <button 
-                                                    key={i}
-                                                    onClick={() => handleEmergencyPlan(opt.type)}
-                                                    disabled={isGeneratingEmergency}
-                                                    className="bg-white border-2 border-blue-100 hover:bg-blue-50 hover:border-blue-300 text-blue-600 py-4 rounded-2xl font-bold transition-all active:scale-95 shadow-sm disabled:opacity-50"
-                                                >
-                                                    {opt.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        {isGeneratingEmergency && <div className="mt-6 text-center text-blue-400 text-sm animate-pulse">正在搜尋替代方案...</div>}
-                                    </>
-                                ) : (
-                                    <div className="space-y-4 animate-fadeIn">
-                                        {emergencyPlan.map((plan, i) => (
-                                            <div key={i} className="bg-blue-50/50 border border-blue-100 p-4 rounded-xl">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className="text-2xl">{plan.icon}</span>
-                                                    <h4 className="font-bold text-blue-700">{plan.title}</h4>
-                                                </div>
-                                                <p className="text-sm text-gray-600 leading-relaxed">{plan.desc}</p>
-                                            </div>
-                                        ))}
-                                        <button onClick={() => setEmergencyPlan(null)} className="w-full mt-2 py-3 text-sm text-gray-400 hover:text-gray-600">重新選擇</button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                );
-            };
-
-            const OmikujiModal = () => {
-                if (!isOmikujiOpen) return null;
-                return (
-                    <div className="fixed inset-0 z-[5000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-                         <div className="bg-[#fffbf0] w-full max-w-sm rounded-3xl shadow-2xl border-4 border-red-200 relative overflow-hidden text-center p-6">
-                            <button onClick={() => setIsOmikujiOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><Icons.X size={24}/></button>
-                            
-                            {!omikujiResult ? (
-                                <div className="py-8">
-                                    <div className={`text-6xl mb-6 ${isDrawingOmikuji ? 'animate-shake' : ''}`}>⛩️</div>
-                                    <h3 className="text-xl font-bold text-red-800 mb-2">每日靈籤</h3>
-                                    <p className="text-sm text-red-400 mb-8">誠心祈求，點擊籤筒抽一支籤...</p>
-                                    <button 
-                                        onClick={handleOmikuji}
-                                        disabled={isDrawingOmikuji}
-                                        className="bg-red-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-red-600 active:scale-95 transition-all disabled:opacity-70"
-                                    >
-                                        {isDrawingOmikuji ? '祈禱中...' : '抽 籤'}
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="animate-pop-in py-4 relative">
-                                    <div className="border-2 border-red-800 p-1 inline-block mb-4">
-                                        <div className="border border-red-800 px-4 py-6 bg-white min-w-[200px]">
-                                            <div className="text-4xl font-bold text-red-600 mb-4 font-serif writing-vertical-rl mx-auto h-32 flex items-center justify-center">{omikujiResult.result}</div>
-                                            <div className="w-full h-px bg-red-200 my-4"></div>
-                                            <p className="text-sm text-gray-700 leading-loose text-left font-serif">{omikujiResult.message}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-center gap-4 text-xs font-bold text-red-500 mt-2">
-                                        <span className="bg-red-50 px-2 py-1 rounded border border-red-100">幸運物：{omikujiResult.lucky_item}</span>
-                                        <span className="bg-red-50 px-2 py-1 rounded border border-red-100">色：{omikujiResult.lucky_color}</span>
-                                    </div>
-                                    <button onClick={() => setIsOmikujiOpen(false)} className="mt-8 text-gray-400 text-sm underline">收下籤詩</button>
-                                </div>
-                            )}
-                         </div>
-                    </div>
-                );
-            };
-
             return (
                 <div 
                     className="h-[100dvh] bg-[#fffafc] font-sans max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-gray-100 flex flex-col"
@@ -1746,10 +1472,6 @@
                         onConfirm={dialog.onConfirm} 
                         onCancel={closeDialog} 
                     />
-                    
-                    {/* New Feature Modals */}
-                    <EmergencyModal />
-                    <OmikujiModal />
 
                     {/* Header */}
                     <header className="bg-pink-100/90 backdrop-blur-md p-2 sticky top-0 z-50 border-b-2 border-pink-200 border-dashed shadow-sm flex-shrink-0">
@@ -1789,14 +1511,6 @@
                                         <button key={idx} onClick={() => setSelectedDayIndex(idx)} className={`inline-block mx-1 px-3 py-1 rounded-2xl text-[10px] font-bold transition-all duration-200 ${selectedDayIndex === idx ? 'bg-pink-400 text-white shadow-md transform scale-105' : 'bg-gray-50/50 text-gray-500 hover:bg-pink-50/50 border border-gray-100/50'}`}><div className="flex flex-col items-center"><span>Day {idx + 1}</span><span className="font-normal opacity-80">{day.shortDate}</span></div></button>
                                     ))}
                                 </div>
-                                
-                                {/* Emergency Plan Trigger */}
-                                <div className="flex justify-end">
-                                    <button onClick={() => setIsEmergencyOpen(true)} className="bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 hover:bg-blue-600 transition-colors">
-                                        <Icons.Umbrella size={14}/> 突發狀況？
-                                    </button>
-                                </div>
-
                                 <div className="flex-grow">
                                     {(() => {
                                         const day = tripData.itinerary[selectedDayIndex];
@@ -1883,65 +1597,8 @@
 
                         {activeTab === 'info' && (
                             <div className="space-y-6 animate-fadeIn pb-8">
-                                {/* Omikuji Trigger */}
-                                <div className="mb-4">
-                                    <div onClick={() => setIsOmikujiOpen(true)} className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-red-100 transition-colors shadow-sm group">
-                                        <div className="flex items-center gap-3">
-                                            <div className="text-4xl group-hover:animate-bounce-slow">⛩️</div>
-                                            <div>
-                                                <h3 className="font-bold text-red-800 text-lg">今日運勢抽籤</h3>
-                                                <p className="text-xs text-red-400">每天一抽，看看今天的幸運色是什麼！</p>
-                                            </div>
-                                        </div>
-                                        <Icons.ArrowRight className="text-red-300" />
-                                    </div>
-                                </div>
-
                                 <section><div className="flex items-center gap-2 mb-3"><div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-500"><Icons.Plane size={16} /></div><h2 className="text-lg font-bold text-gray-700">航班資訊</h2></div>{tripData.flights.map((flight, idx) => (<LaceCard key={idx} color="blue" className="mb-3" icon={<Icons.Plane className="w-full h-full"/>}><div className="p-4 relative z-10"><div className="flex justify-between mb-2"><span className="bg-blue-100/60 text-blue-600 text-xs px-2 py-1 rounded-lg font-bold">{flight.type}</span><span className="text-gray-400 text-xs font-mono">{flight.date}</span></div><div className="font-bold text-lg text-gray-800 mb-2">{flight.flight}</div><div className="flex items-center gap-3 text-sm text-gray-600 mb-3 bg-gray-50/50 p-2 rounded-lg border border-gray-100/50"><span className="font-bold">{flight.dep}</span><Icons.ArrowRight size={14} className="text-gray-400" /><span className="font-bold">{flight.arr}</span></div><div className="text-xs text-orange-500 flex gap-1 items-start"><Icons.AlertCircle size={12} className="mt-0.5 shrink-0"/> {flight.note}</div></div></LaceCard>))}</section>
                                 <section><div className="flex items-center gap-2 mb-3"><div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center text-pink-500"><Icons.Hotel size={16} /></div><h2 className="text-lg font-bold text-gray-700">住宿資訊</h2></div>{tripData.hotels.map((hotel, idx) => (<LaceCard key={idx} color="pink" className="mb-4" icon={<Icons.Hotel className="w-full h-full"/>}><div className="p-5 relative z-10"><div className="flex justify-between items-start mb-2"><span className="font-bold text-pink-500 text-xs border border-pink-200/60 px-2 py-0.5 rounded-full bg-white/60">{hotel.city}</span><div className="text-xs text-gray-400">{hotel.checkIn}</div></div><h3 className="font-bold text-gray-800 text-lg leading-tight mb-1">{hotel.name}</h3><div className="flex items-center gap-1 text-xs text-yellow-500 mb-3"><Icons.Star size={10} fill="currentColor"/> {hotel.rating}</div><div className="bg-gray-50/50 border border-gray-100/60 p-3 rounded-xl text-sm text-gray-600 mb-3"><div className="flex justify-between items-start mb-2"><span className="w-3/4">{hotel.address}</span><CopyButton text={hotel.address} /></div><a href={hotel.mapLink} target="_blank" rel="noreferrer" className="text-blue-500 text-xs flex items-center gap-1 font-bold hover:underline"><Icons.Navigation size={12}/> 開啟地圖</a></div><div className="text-xs text-gray-500 flex gap-2 items-center bg-white/60 p-2 rounded-lg border border-dashed border-gray-200/60"><Icons.Train size={12} className="text-gray-400"/> {hotel.transport}</div></div></LaceCard>))}</section>
-                                
-                                {/* Smart Packing List Section */}
-                                <LaceCard color="green" icon={<Icons.Briefcase className="w-full h-full text-green-200"/>}>
-                                    <div className="p-5 relative z-10">
-                                        <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2 border-b border-dashed border-gray-200/60 pb-3">
-                                            <Icons.Briefcase size={18} className="text-green-500"/> AI 智慧行李清單
-                                        </h3>
-                                        <div className="space-y-4">
-                                            {!packingList ? (
-                                                <div className="text-center py-2">
-                                                    <p className="text-xs text-gray-500 mb-3">根據行程與天氣，幫您生成檢查表！</p>
-                                                    <button 
-                                                        onClick={handleGeneratePackingList}
-                                                        disabled={isGeneratingList}
-                                                        className="w-full bg-green-500 text-white p-3 rounded-xl font-bold shadow-md hover:bg-green-600 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
-                                                    >
-                                                        {isGeneratingList ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <Icons.Sparkles size={18}/>}
-                                                        {isGeneratingList ? '正在整理清單...' : '生成行李清單'}
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-3 animate-fadeIn">
-                                                    <div className="flex justify-end">
-                                                        <button onClick={() => { setPackingList(null); localStorage.removeItem('packing_list_v1'); }} className="text-[10px] text-red-400 flex items-center gap-1 hover:text-red-600"><Icons.Trash2 size={12}/> 清除清單</button>
-                                                    </div>
-                                                    {packingList.map((category, idx) => (
-                                                        <div key={idx} className="bg-white/60 p-3 rounded-xl border border-green-100">
-                                                            <h4 className="font-bold text-green-600 text-sm mb-2 border-b border-green-50 pb-1">{category.category}</h4>
-                                                            <div className="grid grid-cols-2 gap-2">
-                                                                {category.items.map((item, i) => (
-                                                                    <label key={i} className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer hover:text-gray-800">
-                                                                        <input type="checkbox" className="accent-green-500 w-3.5 h-3.5" />
-                                                                        <span className="truncate">{item}</span>
-                                                                    </label>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </LaceCard>
                                 
                                 {/* Souvenir Suggestion Section */}
                                 <LaceCard color="orange" icon={<Icons.Gift className="w-full h-full text-orange-200"/>}>
